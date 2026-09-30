@@ -58,6 +58,8 @@ dev_dependencies:
   drift_dev: ^2.35.0
   freezed: ^4.0.1
   json_serializable: ^6.14.1
+  # riverpod_annotation 4.0.7과 짝을 이루는 코드 생성기
+  riverpod_generator: ^4.0.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
