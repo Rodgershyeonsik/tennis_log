@@ -70,7 +70,7 @@ docs/specs/       기능별 명세
 enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때는 drift의 `schemaVersion`을 올리고 **마이그레이션을 작성해서 기존 데이터를 보존**한다.
 
 **places (장소)**: 장소 하나 = 코트 하나. 시설 단위 그룹은 두지 않는다.
-- id, name, surface (hard / artificialGrass / clay / other), isIndoor (bool), createdAt, lastUsedAt
+- id, name (유일), surface (hard / artificialGrass / clay / other), isIndoor (bool), createdAt, lastUsedAt
 - 같은 시설의 실내/야외 코트는 "귀뚜라미 실내", "귀뚜라미 야외"처럼 별개 장소로 등록한다.
 
 **sessions (일지 세션)**
@@ -88,7 +88,8 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 - createdAt, updatedAt
 
 **cues (큐)**
-- id, text (정규화: 앞뒤 공백 제거, 연속 공백 하나로. 같은 텍스트는 재사용), createdAt, lastUsedAt
+- id, text (유일. 정규화: 앞뒤 공백 제거, 연속 공백 하나로. 같은 텍스트는 재사용), createdAt, lastUsedAt
+- Dart 쪽 getter 이름만 `cueText`다. drift의 `text()` 빌더와 이름이 겹쳐서 SQL 컬럼명(`text`)만 맞췄다.
 - 사용 횟수와 최근 적용 결과는 sessions에서 계산한다.
 
 **games (게임)**: 세션에 여러 개
@@ -110,15 +111,32 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 
 **tagAliases (태그 인식 표현)**
 - id, tagId, alias, confidence: sure / ambiguous
+- (tagId, alias) 유일. 시드를 여러 번 돌려도 중복되지 않게 한다. alias 단독으로는 유일하지 않다(한 표현이 여러 태그에 걸릴 수 있다).
 
 **tagExclusions (제외 단어)**
-- id, tagId, word. 해당 태그의 표현이 이 단어 안에 포함돼 있으면 태그를 붙이지 않는다.
+- id, tagId, word. 해당 태그의 표현이 이 단어 안에 포함돼 있으면 태그를 붙이지 않는다. (tagId, word) 유일.
 
 **memoTags (메모-태그 연결)**
 - memoId, tagId (복합 기본키)
 - source: auto / manual
 - status: confirmed / suggested / rejected
 - rejected는 사용자가 지운 자동 태그를 기억하는 상태. 다시 저장해도 같은 태그를 붙이지 않으며, 화면에는 표시하지 않는다.
+
+### DB 저장 규칙
+
+- **DateTime은 ISO-8601 텍스트로 저장한다** (`DriftDatabaseOptions(storeDateTimeAsText: true)`). `sessions.date`가 날짜 전용 값인데 유닉스 초로 저장하면 타임존에 따라 날짜가 하루 밀려 읽힐 수 있다. `sessions.date`는 로컬 자정으로 정규화해서 넣는다. **이 설정은 기존 데이터와 호환되지 않으므로 나중에 바꾸면 안 된다.**
+- enum은 drift의 텍스트 enum이라 **DB에 각 값의 `name` 문자열이 그대로 들어간다.** 값 이름 변경·삭제는 마이그레이션에서 기존 행을 UPDATE해야 한다. 값 추가는 안전하다.
+- **외래키 제약은 `beforeOpen`에서 `PRAGMA foreign_keys = ON`으로 켠다.** SQLite는 기본이 꺼짐이고 커넥션마다 켜야 한다. 안 켜면 아래 cascade가 전부 동작하지 않는다.
+- **삭제 규칙**: 부모가 사라지면 자식이 의미를 잃는 "소유" 관계면 cascade, 부모와 자식이 독립적으로 존재하는 "참조" 관계면 걸지 않는다(=부모 삭제가 거부된다).
+  - cascade: `games.sessionId`, `memos.sessionId`, `memoTags.memoId`, `memoTags.tagId`, `tagAliases.tagId`, `tagExclusions.tagId`
+  - cascade 없음: `sessions.placeId`, `sessions.cueId`, `tags.parentTagId`. 장소·큐·태그 삭제는 아직 만들지 않았다. 장소 삭제를 만들 때는 `SET NULL`로 바꾼다 — 스냅샷이 있으니 placeId만 비워도 과거 일지 표시는 그대로다.
+- **CHECK 제약**: `sessions.startMinutes`/`endMinutes`는 360~1440, `conditionScore`는 1~3. 종료가 시작보다 이른 값은 **DB가 막지 않는다** — 자동 저장은 필수값 검사 없이 저장해야 하므로 검증은 화면에서 한다.
+
+### 웹(Chrome) DB
+
+- `web/sqlite3.wasm`과 `web/drift_worker.js`를 저장소에 커밋해 두었다. **drift 버전을 올릴 때 이 두 파일도 같은 버전의 릴리스에서 다시 받아야 한다.** (`https://github.com/simolus3/drift/releases/download/drift-<버전>/`)
+- drift는 브라우저 기능에 따라 OPFS → IndexedDB 순으로 저장 방식을 고르고, 아무것도 못 쓰면 **에러 없이 `inMemory`로 떨어져 새로고침 시 데이터가 사라진다.** 어떤 방식이 선택됐는지 디버그 빌드에서 콘솔에 `[drift] 웹 저장 방식: ...`으로 남긴다.
+- OPFS를 쓰려면 `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy` 헤더가 필요한데 `flutter run`에는 헤더 설정 옵션이 없다. 개발 중에는 shared worker + IndexedDB로 동작하며, 이것도 새로고침 후 유지된다.
 
 ## 라우트
 
@@ -133,7 +151,7 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 
 | 명세 | 상태 |
 |---|---|
-| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 진행 예정 |
+| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 진행 중 — 1단계(프로젝트 기반), 2단계 중 테이블·DB·웹 설정 완료. 다음: 시드·리포지토리 |
 
 ## 향후 계획 (지금 구현하지 않음, 구조는 확장 가능하게)
 
