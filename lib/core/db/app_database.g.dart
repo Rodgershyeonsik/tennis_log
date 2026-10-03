@@ -3186,7 +3186,7 @@ class TagsCompanion extends UpdateCompanion<Tag> {
 }
 
 class $TagAliasesTable extends TagAliases
-    with TableInfo<$TagAliasesTable, TagAliase> {
+    with TableInfo<$TagAliasesTable, TagAliasRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -3243,7 +3243,7 @@ class $TagAliasesTable extends TagAliases
   static const String $name = 'tag_aliases';
   @override
   VerificationContext validateIntegrity(
-    Insertable<TagAliase> instance, {
+    Insertable<TagAliasRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -3277,9 +3277,9 @@ class $TagAliasesTable extends TagAliases
     {tagId, alias},
   ];
   @override
-  TagAliase map(Map<String, dynamic> data, {String? tablePrefix}) {
+  TagAliasRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return TagAliase(
+    return TagAliasRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -3312,12 +3312,12 @@ class $TagAliasesTable extends TagAliases
   );
 }
 
-class TagAliase extends DataClass implements Insertable<TagAliase> {
+class TagAliasRow extends DataClass implements Insertable<TagAliasRow> {
   final int id;
   final int tagId;
   final String alias;
   final AliasConfidence confidence;
-  const TagAliase({
+  const TagAliasRow({
     required this.id,
     required this.tagId,
     required this.alias,
@@ -3346,12 +3346,12 @@ class TagAliase extends DataClass implements Insertable<TagAliase> {
     );
   }
 
-  factory TagAliase.fromJson(
+  factory TagAliasRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return TagAliase(
+    return TagAliasRow(
       id: serializer.fromJson<int>(json['id']),
       tagId: serializer.fromJson<int>(json['tagId']),
       alias: serializer.fromJson<String>(json['alias']),
@@ -3373,19 +3373,19 @@ class TagAliase extends DataClass implements Insertable<TagAliase> {
     };
   }
 
-  TagAliase copyWith({
+  TagAliasRow copyWith({
     int? id,
     int? tagId,
     String? alias,
     AliasConfidence? confidence,
-  }) => TagAliase(
+  }) => TagAliasRow(
     id: id ?? this.id,
     tagId: tagId ?? this.tagId,
     alias: alias ?? this.alias,
     confidence: confidence ?? this.confidence,
   );
-  TagAliase copyWithCompanion(TagAliasesCompanion data) {
-    return TagAliase(
+  TagAliasRow copyWithCompanion(TagAliasesCompanion data) {
+    return TagAliasRow(
       id: data.id.present ? data.id.value : this.id,
       tagId: data.tagId.present ? data.tagId.value : this.tagId,
       alias: data.alias.present ? data.alias.value : this.alias,
@@ -3397,7 +3397,7 @@ class TagAliase extends DataClass implements Insertable<TagAliase> {
 
   @override
   String toString() {
-    return (StringBuffer('TagAliase(')
+    return (StringBuffer('TagAliasRow(')
           ..write('id: $id, ')
           ..write('tagId: $tagId, ')
           ..write('alias: $alias, ')
@@ -3411,14 +3411,14 @@ class TagAliase extends DataClass implements Insertable<TagAliase> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is TagAliase &&
+      (other is TagAliasRow &&
           other.id == this.id &&
           other.tagId == this.tagId &&
           other.alias == this.alias &&
           other.confidence == this.confidence);
 }
 
-class TagAliasesCompanion extends UpdateCompanion<TagAliase> {
+class TagAliasesCompanion extends UpdateCompanion<TagAliasRow> {
   final Value<int> id;
   final Value<int> tagId;
   final Value<String> alias;
@@ -3437,7 +3437,7 @@ class TagAliasesCompanion extends UpdateCompanion<TagAliase> {
   }) : tagId = Value(tagId),
        alias = Value(alias),
        confidence = Value(confidence);
-  static Insertable<TagAliase> custom({
+  static Insertable<TagAliasRow> custom({
     Expression<int>? id,
     Expression<int>? tagId,
     Expression<String>? alias,
@@ -6485,7 +6485,7 @@ final class $$TagsTableReferences
     );
   }
 
-  static MultiTypedResultKey<$TagAliasesTable, List<TagAliase>>
+  static MultiTypedResultKey<$TagAliasesTable, List<TagAliasRow>>
   _tagAliasesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.tagAliases,
     aliasName: 'tags__id__tag_aliases__tag_id',
@@ -6974,7 +6974,7 @@ class $$TagsTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (tagAliasesRefs)
-                        await $_getPrefetchedData<Tag, $TagsTable, TagAliase>(
+                        await $_getPrefetchedData<Tag, $TagsTable, TagAliasRow>(
                           currentTable: table,
                           referencedTable: $$TagsTableReferences
                               ._tagAliasesRefsTable(db),
@@ -7063,7 +7063,7 @@ typedef $$TagAliasesTableUpdateCompanionBuilder = TagAliasesCompanion Function({
 });
 
 final class $$TagAliasesTableReferences
-    extends BaseReferences<_$AppDatabase, $TagAliasesTable, TagAliase> {
+    extends BaseReferences<_$AppDatabase, $TagAliasesTable, TagAliasRow> {
   $$TagAliasesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $TagsTable _tagIdTable(_$AppDatabase db) =>
@@ -7231,14 +7231,14 @@ class $$TagAliasesTableTableManager
         RootTableManager<
           _$AppDatabase,
           $TagAliasesTable,
-          TagAliase,
+          TagAliasRow,
           $$TagAliasesTableFilterComposer,
           $$TagAliasesTableOrderingComposer,
           $$TagAliasesTableAnnotationComposer,
           $$TagAliasesTableCreateCompanionBuilder,
           $$TagAliasesTableUpdateCompanionBuilder,
-          (TagAliase, $$TagAliasesTableReferences),
-          TagAliase,
+          (TagAliasRow, $$TagAliasesTableReferences),
+          TagAliasRow,
           PrefetchHooks Function({bool tagId})
         > {
   $$TagAliasesTableTableManager(_$AppDatabase db, $TagAliasesTable table)
@@ -7279,7 +7279,7 @@ class $$TagAliasesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$TagAliasesTable, TagAliase>(table),
+                  e.readTable<$TagAliasesTable, TagAliasRow>(table),
                   $$TagAliasesTableReferences(db, table, e),
                 ),
               )
@@ -7331,14 +7331,14 @@ typedef $$TagAliasesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $TagAliasesTable,
-      TagAliase,
+      TagAliasRow,
       $$TagAliasesTableFilterComposer,
       $$TagAliasesTableOrderingComposer,
       $$TagAliasesTableAnnotationComposer,
       $$TagAliasesTableCreateCompanionBuilder,
       $$TagAliasesTableUpdateCompanionBuilder,
-      (TagAliase, $$TagAliasesTableReferences),
-      TagAliase,
+      (TagAliasRow, $$TagAliasesTableReferences),
+      TagAliasRow,
       PrefetchHooks Function({bool tagId})
     >;
 typedef $$TagExclusionsTableCreateCompanionBuilder =

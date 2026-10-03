@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 import 'enums.dart';
+import 'seed/tag_seeder.dart';
 import 'tables.dart';
 
 // 짝이 되는 생성 코드. `dart run build_runner build`로 만들어진다.
@@ -55,6 +56,12 @@ class AppDatabase extends _$AppDatabase {
       // 이걸 안 켜면 테이블에 선언한 ON DELETE CASCADE가 전부 동작하지 않는다.
       // (PRAGMA는 트랜잭션 안에서 바꿀 수 없어서 beforeOpen에서 실행한다.)
       await customStatement('PRAGMA foreign_keys = ON');
+
+      // 기본 태그 사전을 넣는다. onCreate가 아니라 여기인 이유:
+      // Android와 웹이 각각 별개 DB라 양쪽 첫 실행을 모두 덮어야 하고,
+      // 이미 테이블이 만들어진 개발 환경에도 시드가 들어가야 한다.
+      // tags가 비어 있을 때만 실제로 동작한다.
+      await seedTagDictionary(this);
     },
   );
 }

@@ -166,6 +166,12 @@ class Tags extends Table {
 
 /// 태그 인식 표현. 태그 하나에 표현 여러 개가 붙는다.
 /// 예: #서브 → "서브", "퍼스트", "세컨", "트로피", "플랫 서브"
+///
+/// 행 클래스 이름을 직접 지정한 이유: drift는 테이블 이름 끝의 `s`를 떼서 행
+/// 클래스 이름을 만드는데, `TagAliases`는 `TagAliase`가 되어 오타처럼 보인다.
+/// `TagAlias`로 하면 도메인 모델의 `TagAlias`(태그 엔진 입력)와 이름이 겹치므로
+/// `Row` 접미사를 붙여 "DB 행"임을 드러낸다.
+@DataClassName('TagAliasRow')
 @TableIndex(name: 'tag_aliases_tag_id', columns: {#tagId})
 class TagAliases extends Table {
   IntColumn get id => integer().autoIncrement()();

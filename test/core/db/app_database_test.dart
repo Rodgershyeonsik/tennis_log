@@ -1,4 +1,5 @@
-import 'package:drift/drift.dart';
+// drift도 isNull/isNotNull을 내보내서 matcher의 것과 겹친다.
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tennis_log/core/db/app_database.dart';
@@ -7,6 +8,10 @@ import 'package:tennis_log/core/db/enums.dart';
 /// 이 테스트는 스키마의 "조용히 깨질 수 있는 부분"을 못 박아 두는 용도다.
 /// 특히 외래키 제약은 SQLite에서 커넥션마다 켜줘야 하는데, 안 켜져 있어도
 /// insert/delete가 에러 없이 통과하므로 테스트 없이는 알아차리기 어렵다.
+///
+/// **주의**: AppDatabase를 열면 beforeOpen에서 기본 태그 사전이 시드된다.
+/// 그래서 tags는 처음부터 비어 있지 않다. 여기서 쓰는 태그 이름은 시드와
+/// 겹치지 않게 "테스트"로 시작하는 이름을 쓰고, 검증도 만든 행에만 한정한다.
 void main() {
   late AppDatabase db;
 
@@ -43,7 +48,7 @@ void main() {
         );
   }
 
-  Future<int> insertTag({String name = '백발리', int? parentTagId}) {
+  Future<int> insertTag({String name = '테스트 태그', int? parentTagId}) {
     return db
         .into(db.tags)
         .insert(
@@ -108,14 +113,16 @@ void main() {
               orderIndex: 0,
             ),
           );
-      await db.into(db.memoTags).insert(
-        MemoTagsCompanion.insert(
-          memoId: memoId,
-          tagId: tagId,
-          source: MemoTagSource.auto,
-          status: MemoTagStatus.confirmed,
-        ),
-      );
+      await db
+          .into(db.memoTags)
+          .insert(
+            MemoTagsCompanion.insert(
+              memoId: memoId,
+              tagId: tagId,
+              source: MemoTagSource.auto,
+              status: MemoTagStatus.confirmed,
+            ),
+          );
 
       await (db.delete(db.sessions)..where((t) => t.id.equals(sessionId))).go();
 
@@ -123,26 +130,44 @@ void main() {
       expect(await db.select(db.memos).get(), isEmpty);
       expect(await db.select(db.memoTags).get(), isEmpty);
       // 태그 자체는 세션에 속한 데이터가 아니므로 남아 있어야 한다.
-      expect(await db.select(db.tags).get(), hasLength(1));
+      final tagStillThere = await (db.select(
+        db.tags,
+      )..where((t) => t.id.equals(tagId))).getSingleOrNull();
+      expect(tagStillThere, isNotNull);
     });
 
     test('태그를 지우면 인식 표현과 제외 단어가 사라진다', () async {
-      final tagId = await insertTag(name: '서브');
-      await db.into(db.tagAliases).insert(
-        TagAliasesCompanion.insert(
-          tagId: tagId,
-          alias: '퍼스트',
-          confidence: AliasConfidence.sure,
-        ),
-      );
+      final tagId = await insertTag();
+      await db
+          .into(db.tagAliases)
+          .insert(
+            TagAliasesCompanion.insert(
+              tagId: tagId,
+              alias: '테스트 표현',
+              confidence: AliasConfidence.sure,
+            ),
+          );
       await db
           .into(db.tagExclusions)
-          .insert(TagExclusionsCompanion.insert(tagId: tagId, word: '서브 리턴'));
+          .insert(
+            TagExclusionsCompanion.insert(tagId: tagId, word: '테스트 제외 단어'),
+          );
 
       await (db.delete(db.tags)..where((t) => t.id.equals(tagId))).go();
 
-      expect(await db.select(db.tagAliases).get(), isEmpty);
-      expect(await db.select(db.tagExclusions).get(), isEmpty);
+      // 시드된 다른 태그의 표현은 그대로 있으므로 이 태그의 것만 확인한다.
+      expect(
+        await (db.select(
+          db.tagAliases,
+        )..where((t) => t.tagId.equals(tagId))).get(),
+        isEmpty,
+      );
+      expect(
+        await (db.select(
+          db.tagExclusions,
+        )..where((t) => t.tagId.equals(tagId))).get(),
+        isEmpty,
+      );
     });
   });
 
@@ -170,8 +195,8 @@ void main() {
     });
 
     test('자식이 부모로 가리키는 태그는 지울 수 없다', () async {
-      final parentId = await insertTag(name: '발리');
-      await insertTag(name: '백발리', parentTagId: parentId);
+      final parentId = await insertTag(name: '테스트 부모');
+      await insertTag(name: '테스트 자식', parentTagId: parentId);
 
       await expectLater(
         (db.delete(db.tags)..where((t) => t.id.equals(parentId))).go(),
@@ -198,25 +223,30 @@ void main() {
     });
 
     test('같은 이름의 태그는 두 번 만들 수 없다', () async {
-      await insertTag(name: '포칭');
-      await expectLater(insertTag(name: '포칭'), throwsA(isA<SqliteException>()));
+      await insertTag(name: '테스트 중복 태그');
+      await expectLater(
+        insertTag(name: '테스트 중복 태그'),
+        throwsA(isA<SqliteException>()),
+      );
     });
 
     test('같은 태그에 같은 인식 표현은 한 번만 들어간다', () async {
-      final tagId = await insertTag(name: '서브');
-      Future<int> addAlias(int forTag) => db.into(db.tagAliases).insert(
-        TagAliasesCompanion.insert(
-          tagId: forTag,
-          alias: '세컨',
-          confidence: AliasConfidence.sure,
-        ),
-      );
+      final tagId = await insertTag(name: '테스트 태그 A');
+      Future<int> addAlias(int forTag) => db
+          .into(db.tagAliases)
+          .insert(
+            TagAliasesCompanion.insert(
+              tagId: forTag,
+              alias: '테스트 표현',
+              confidence: AliasConfidence.sure,
+            ),
+          );
 
       await addAlias(tagId);
       await expectLater(addAlias(tagId), throwsA(isA<SqliteException>()));
 
       // 같은 표현이 **다른** 태그에 붙는 건 허용한다.
-      final otherTagId = await insertTag(name: '토스');
+      final otherTagId = await insertTag(name: '테스트 태그 B');
       await expectLater(addAlias(otherTagId), completes);
     });
 
@@ -224,14 +254,16 @@ void main() {
       final sessionId = await insertSession();
       final memoId = await insertMemo(sessionId);
       final tagId = await insertTag();
-      Future<int> link() => db.into(db.memoTags).insert(
-        MemoTagsCompanion.insert(
-          memoId: memoId,
-          tagId: tagId,
-          source: MemoTagSource.auto,
-          status: MemoTagStatus.suggested,
-        ),
-      );
+      Future<int> link() => db
+          .into(db.memoTags)
+          .insert(
+            MemoTagsCompanion.insert(
+              memoId: memoId,
+              tagId: tagId,
+              source: MemoTagSource.auto,
+              status: MemoTagStatus.suggested,
+            ),
+          );
 
       await link();
       await expectLater(link(), throwsA(isA<SqliteException>()));

@@ -112,6 +112,7 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 **tagAliases (태그 인식 표현)**
 - id, tagId, alias, confidence: sure / ambiguous
 - (tagId, alias) 유일. 시드를 여러 번 돌려도 중복되지 않게 한다. alias 단독으로는 유일하지 않다(한 표현이 여러 태그에 걸릴 수 있다).
+- drift 행 클래스 이름은 `@DataClassName`으로 `TagAliasRow`로 지정했다. 기본 규칙(끝의 `s` 제거)으로는 `TagAliase`가 되고, `TagAlias`는 도메인 모델과 겹친다.
 
 **tagExclusions (제외 단어)**
 - id, tagId, word. 해당 태그의 표현이 이 단어 안에 포함돼 있으면 태그를 붙이지 않는다. (tagId, word) 유일.
@@ -132,10 +133,20 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
   - cascade 없음: `sessions.placeId`, `sessions.cueId`, `tags.parentTagId`. 장소·큐·태그 삭제는 아직 만들지 않았다. 장소 삭제를 만들 때는 `SET NULL`로 바꾼다 — 스냅샷이 있으니 placeId만 비워도 과거 일지 표시는 그대로다.
 - **CHECK 제약**: `sessions.startMinutes`/`endMinutes`는 360~1440, `conditionScore`는 1~3. 종료가 시작보다 이른 값은 **DB가 막지 않는다** — 자동 저장은 필수값 검사 없이 저장해야 하므로 검증은 화면에서 한다.
 
+### 태그 사전 시드
+
+- 기본 태그 사전(태그 58개 + 인식 표현 176개 + 제외 단어 7개)은 `lib/core/db/seed/tag_seed_data.dart`에 **순수 Dart 상수**로 두고, `tag_seeder.dart`가 `beforeOpen`에서 넣는다.
+- `onCreate`가 아니라 `beforeOpen`인 이유: Android와 웹이 각각 별개 DB라 양쪽 첫 실행을 모두 덮어야 하고, 이미 테이블이 만들어진 개발 환경에도 시드가 들어가야 한다. `tags`가 비어 있을 때만 실제로 동작한다.
+- **시드는 최초 1회만 돈다.** 이미 설치된 앱에 태그를 추가하려면 마이그레이션이 따로 필요하다.
+- 명세(`docs/specs/01_journal_entry.md` 7번)를 고치면 `tag_seed_data.dart`도 함께 고친다. `test/core/db/tag_seeder_test.dart`가 카테고리별 개수와 confidence 표기를 검증한다.
+- `AppDatabase`를 열면 항상 시드가 들어가므로, **테스트에서 tags는 비어 있지 않다.** 태그를 만드는 테스트는 시드와 겹치지 않는 이름을 쓴다.
+
 ### 웹(Chrome) DB
 
 - `web/sqlite3.wasm`과 `web/drift_worker.js`를 저장소에 커밋해 두었다. **drift 버전을 올릴 때 이 두 파일도 같은 버전의 릴리스에서 다시 받아야 한다.** (`https://github.com/simolus3/drift/releases/download/drift-<버전>/`)
 - drift는 브라우저 기능에 따라 OPFS → IndexedDB 순으로 저장 방식을 고르고, 아무것도 못 쓰면 **에러 없이 `inMemory`로 떨어져 새로고침 시 데이터가 사라진다.** 어떤 방식이 선택됐는지 디버그 빌드에서 콘솔에 `[drift] 웹 저장 방식: ...`으로 남긴다.
+- **`flutter run -d chrome`은 매번 임시 Chrome 프로필로 띄우고, 정상 종료될 때만 `.dart_tool/chrome-device/`로 복사한다.** 그래서 터미널에서 `q`로 끄거나 창을 닫으면 DB가 유지되지만, 프로세스를 강제 종료하면 그 실행 동안의 데이터가 유실된다.
+- **개발용 웹 DB를 비우려면 `.dart_tool/chrome-device/`를 삭제한다.** 시드를 고친 뒤 새 태그 사전을 넣어보려면 이 방법을 쓴다(시드는 `tags`가 빈 DB에서만 돌기 때문).
 - OPFS를 쓰려면 `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy` 헤더가 필요한데 `flutter run`에는 헤더 설정 옵션이 없다. 개발 중에는 shared worker + IndexedDB로 동작하며, 이것도 새로고침 후 유지된다.
 
 ## 라우트
@@ -151,7 +162,7 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 
 | 명세 | 상태 |
 |---|---|
-| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 진행 중 — 1단계(프로젝트 기반), 2단계 중 테이블·DB·웹 설정 완료. 다음: 시드·리포지토리 |
+| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 진행 중 — 1단계(프로젝트 기반), 2단계(데이터 계층) 완료. 다음: 3단계 자동 태그·평가 추천 엔진 |
 
 ## 향후 계획 (지금 구현하지 않음, 구조는 확장 가능하게)
 
