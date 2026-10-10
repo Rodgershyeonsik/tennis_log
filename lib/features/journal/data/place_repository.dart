@@ -23,6 +23,18 @@ class PlaceRepository {
         .watch();
   }
 
+  /// 장소 더보기 시트의 목록. **이름 오름차순**이고, [query]가 있으면 이름에
+  /// 그 말이 들어간 장소만 남긴다.
+  Stream<List<Place>> watchByName({String query = ''}) {
+    final trimmed = query.trim();
+    final select = _db.select(_db.places)
+      ..orderBy([(t) => OrderingTerm.asc(t.name)]);
+    if (trimmed.isNotEmpty) {
+      select.where((t) => t.name.contains(trimmed));
+    }
+    return select.watch();
+  }
+
   Future<Place?> findById(int id) {
     return (_db.select(_db.places)
           ..where((t) => t.id.equals(id))

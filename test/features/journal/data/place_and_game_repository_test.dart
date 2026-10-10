@@ -77,6 +77,53 @@ void main() {
     });
   });
 
+  group('PlaceRepository.watchByName', () {
+    Future<void> seed() async {
+      for (final name in ['양재 야외', '귀뚜라미 실내', '강남 실내', '귀뚜라미 야외']) {
+        await places.create(
+          name: name,
+          surface: SurfaceType.hard,
+          isIndoor: false,
+        );
+      }
+    }
+
+    test('검색어가 없으면 이름 오름차순 전체', () async {
+      await seed();
+
+      final result = await places.watchByName().first;
+
+      expect(result.map((p) => p.name), [
+        '강남 실내',
+        '귀뚜라미 실내',
+        '귀뚜라미 야외',
+        '양재 야외',
+      ]);
+    });
+
+    test('검색어가 있으면 이름에 들어간 것만 남는다', () async {
+      await seed();
+
+      final result = await places.watchByName(query: '귀뚜라미').first;
+
+      expect(result.map((p) => p.name), ['귀뚜라미 실내', '귀뚜라미 야외']);
+    });
+
+    test('가운데 글자로도 찾고, 앞뒤 공백은 무시한다', () async {
+      await seed();
+
+      final result = await places.watchByName(query: '  실내 ').first;
+
+      expect(result.map((p) => p.name), ['강남 실내', '귀뚜라미 실내']);
+    });
+
+    test('없는 이름이면 빈 목록', () async {
+      await seed();
+
+      expect(await places.watchByName(query: '없는곳').first, isEmpty);
+    });
+  });
+
   group('GameRepository', () {
     late int sessionId;
 

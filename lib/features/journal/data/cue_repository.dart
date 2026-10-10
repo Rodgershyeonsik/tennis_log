@@ -35,6 +35,28 @@ class CueRepository {
         .getSingleOrNull();
   }
 
+  Future<Cue?> findById(int id) {
+    return (_db.select(_db.cues)
+          ..where((t) => t.id.equals(id))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  /// 정규화한 텍스트로 큐를 찾는다. **없으면 만들지 않는다.**
+  ///
+  /// 자동 저장에서 쓴다. 타이핑 중간값("백", "백스")으로 큐 행이 쌓이면 안 되므로
+  /// 자동 저장은 이미 있는 큐와 일치할 때만 cueId를 연결하고, 새 큐를 만드는 건
+  /// 저장 버튼(= [findOrCreate])에서만 한다.
+  Future<Cue?> findByText(String rawText) async {
+    final text = normalize(rawText);
+    if (text.isEmpty) return null;
+
+    return (_db.select(_db.cues)
+          ..where((t) => t.cueText.equals(text))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
   /// 정규화한 텍스트로 큐를 찾고, 없으면 만든다.
   ///
   /// 빈 문자열이면 null을 돌려준다(큐 없이 저장하는 경우).
