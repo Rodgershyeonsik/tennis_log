@@ -14,12 +14,10 @@ class Places extends Table {
   TextColumn get surface => textEnum<SurfaceType>()();
   BoolColumn get isIndoor => boolean()();
 
-  DateTimeColumn get createdAt =>
-      dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get createdAt => dateTime().clientDefault(DateTime.now)();
 
   /// 작성 화면의 "최근 사용 순" 장소 칩 정렬에 쓴다.
-  DateTimeColumn get lastUsedAt =>
-      dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get lastUsedAt => dateTime().clientDefault(DateTime.now)();
 }
 
 /// 큐. 텍스트는 정규화(앞뒤 공백 제거, 연속 공백 하나로)해서 저장하고,
@@ -35,10 +33,8 @@ class Cues extends Table {
   // 그래서 getter는 `cueText`로 두고 SQL 컬럼명만 `text`로 맞춘다.
   TextColumn get cueText => text().named('text').unique()();
 
-  DateTimeColumn get createdAt =>
-      dateTime().clientDefault(DateTime.now)();
-  DateTimeColumn get lastUsedAt =>
-      dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get createdAt => dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get lastUsedAt => dateTime().clientDefault(DateTime.now)();
 }
 
 /// 일지 세션. 한 번의 게임/레슨/연습이 한 행이다.
@@ -91,16 +87,15 @@ class Sessions extends Table {
   /// 큐를 게임 중 의식적으로 적용했는지
   TextColumn get cueApplied => textEnum<CueApplied>().nullable()();
 
-  TextColumn get status => textEnum<SessionStatus>()
-      .withDefault(Constant(SessionStatus.draft.name))();
+  TextColumn get status => textEnum<SessionStatus>().withDefault(
+    Constant(SessionStatus.draft.name),
+  )();
 
   /// 태그·평가 확인(2단계) 완료 여부
   BoolColumn get tagReviewed => boolean().withDefault(const Constant(false))();
 
-  DateTimeColumn get createdAt =>
-      dateTime().clientDefault(DateTime.now)();
-  DateTimeColumn get updatedAt =>
-      dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get createdAt => dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get updatedAt => dateTime().clientDefault(DateTime.now)();
 }
 
 /// 게임. 한 세션에 여러 개 들어간다.
@@ -141,10 +136,8 @@ class Memos extends Table {
   /// 이 값과 content가 같으면 다시 추천을 돌리지 않는다.
   TextColumn get lastTaggedContent => text().nullable()();
 
-  DateTimeColumn get createdAt =>
-      dateTime().clientDefault(DateTime.now)();
-  DateTimeColumn get updatedAt =>
-      dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get createdAt => dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get updatedAt => dateTime().clientDefault(DateTime.now)();
 }
 
 /// 태그. 메모와는 이름이 아니라 id로 연결한다.
@@ -160,8 +153,7 @@ class Tags extends Table {
   IntColumn get parentTagId => integer().nullable().references(Tags, #id)();
 
   BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
-  DateTimeColumn get createdAt =>
-      dateTime().clientDefault(DateTime.now)();
+  DateTimeColumn get createdAt => dateTime().clientDefault(DateTime.now)();
 }
 
 /// 태그 인식 표현. 태그 하나에 표현 여러 개가 붙는다.

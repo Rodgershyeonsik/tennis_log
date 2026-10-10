@@ -94,9 +94,7 @@ void main() {
     });
 
     test('ambiguous 표현은 suggested로 붙는다', () {
-      expect(statusesOf('파트너 때문에 멘탈 흔들림'), {
-        '파트너멘탈': MemoTagStatus.suggested,
-      });
+      expect(statusesOf('파트너 때문에 멘탈 흔들림'), {'파트너멘탈': MemoTagStatus.suggested});
     });
 
     test('한 태그가 sure와 ambiguous에 모두 걸리면 confirmed가 이긴다', () {

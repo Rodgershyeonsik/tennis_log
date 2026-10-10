@@ -29,9 +29,8 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: '/journal/:id',
-        builder: (context, state) => JournalEntryPage(
-          sessionId: int.parse(state.pathParameters['id']!),
-        ),
+        builder: (context, state) =>
+            JournalEntryPage(sessionId: int.parse(state.pathParameters['id']!)),
         routes: [
           GoRoute(
             path: 'tags',

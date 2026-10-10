@@ -37,11 +37,9 @@ class SeedDictionary {
         ),
     ];
 
-    return SeedDictionary._(
-      TagDictionary(entries: entries),
-      {for (final entry in entries) entry.tagId: entry.name},
-      idByName,
-    );
+    return SeedDictionary._(TagDictionary(entries: entries), {
+      for (final entry in entries) entry.tagId: entry.name,
+    }, idByName);
   }
 
   final TagDictionary dictionary;

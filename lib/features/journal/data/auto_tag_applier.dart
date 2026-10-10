@@ -136,8 +136,7 @@ class AutoTagApplier {
 
     // 3) 평가. confirmed는 건드리지 않고, 비어 있거나 suggested면 새 결과로 바꾼다.
     //    (새 결과가 없으면 비운다.)
-    final keepEvaluation =
-        memo.evaluationStatus == EvaluationStatus.confirmed;
+    final keepEvaluation = memo.evaluationStatus == EvaluationStatus.confirmed;
 
     await (_db.update(_db.memos)..where((t) => t.id.equals(memo.id))).write(
       MemosCompanion(
@@ -147,9 +146,7 @@ class AutoTagApplier {
         evaluationStatus: keepEvaluation
             ? const Value.absent()
             : Value(
-                analysis.evaluation == null
-                    ? null
-                    : EvaluationStatus.suggested,
+                analysis.evaluation == null ? null : EvaluationStatus.suggested,
               ),
         // 4) 이 내용으로 추천을 돌렸다고 표시한다.
         lastTaggedContent: Value(memo.content),

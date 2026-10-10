@@ -33,14 +33,7 @@ enum MemoEvaluation { good, bad, question }
 enum EvaluationStatus { suggested, confirmed }
 
 /// 태그 분류
-enum TagCategory {
-  technique,
-  form,
-  footwork,
-  situation,
-  body,
-  conditionFactor,
-}
+enum TagCategory { technique, form, footwork, situation, body, conditionFactor }
 
 /// 태그 인식 표현의 확실성.
 ///

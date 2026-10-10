@@ -83,11 +83,9 @@ void main() {
   Future<Map<String, (MemoTagSource, MemoTagStatus)>> readLinks(
     int memoId,
   ) async {
-    final rows =
-        await (db.select(db.memoTags).join([
-              innerJoin(db.tags, db.tags.id.equalsExp(db.memoTags.tagId)),
-            ])..where(db.memoTags.memoId.equals(memoId)))
-            .get();
+    final rows = await (db.select(db.memoTags).join([
+      innerJoin(db.tags, db.tags.id.equalsExp(db.memoTags.tagId)),
+    ])..where(db.memoTags.memoId.equals(memoId))).get();
 
     return {
       for (final row in rows)
