@@ -19,7 +19,7 @@
 - 데이터는 **로컬 저장만** 한다. 서버, 로그인, 동기화 없음.
 - 웹 개발 중 데이터와 Android 실기기 데이터는 서로 별개다.
 - UI 문구는 모두 **한국어**.
-- 날짜 표시는 `intl` 없이 직접 포맷한다. 예: `9/29 (화)`, `18:00`.
+- 날짜 표시는 `intl` 없이 직접 포맷한다. 긴 형식 `2026년 10월 9일 금요일`(작성 화면 일시), 짧은 형식 `26/9/22 금`(목록), 시각 `18:00`. (`lib/core/util/formatters.dart`. `flutter_localizations`가 intl을 끌고 오지만 날짜·시간 표기는 계속 직접 만든다.)
 
 ## 기술 스택
 
@@ -31,12 +31,16 @@
 | `freezed` 4.x (+ `freezed_annotation`) | 화면 상태 등 불변 모델 |
 | `json_serializable` (+ `json_annotation`) | 현재 미사용. 추후 백업/내보내기용 |
 | `build_runner` | drift, freezed, riverpod 코드 생성 |
+| `flutter_localizations` (Flutter SDK) | 날짜 선택기 등 Material이 직접 그리는 문구의 한국어 표기. 지원 로케일은 한국어 하나뿐이라 기기 언어와 무관하게 한국어로 나온다 |
 
 주의:
 - `riverpod_generator`는 설치된 `riverpod_annotation`과 호환되는 버전을 사용한다. (최초 설치 시 누락되어 있었음)
 - **freezed 4.x 문법**을 따른다. (3.x와 클래스 선언 방식이 다르다)
 - **drift 웹 설정**: `drift_flutter`의 웹 옵션을 사용하고, 웹에 필요한 파일(sqlite3 wasm, drift worker)을 `web/` 폴더에 둔다. drift 공식 문서의 웹 설정 가이드를 따른다.
 - 생성 코드(`*.g.dart`, `*.freezed.dart`)는 `dart run build_runner build`로 만든다.
+- **`@riverpod`로는 drift 생성 클래스(`Memo`, `Game`, `Place`, `Cue` 등)를 프로바이더 반환 타입에 쓸 수 없다.** 그 클래스들이 `app_database.g.dart`의 part 안에 선언돼 있어서 `riverpod_generator`가 `InvalidTypeException`으로 실패한다(typedef로 감싸도 같다). 이런 조회 프로바이더는 `StreamProvider`/`FutureProvider`로 **손으로 선언한다** — 예: `features/journal/presentation/entry/entry_providers.dart`. freezed 모델은 문제없다.
+- riverpod 3에는 `AsyncValue.valueOrNull`이 없다. 값이 nullable인 `.value`를 쓴다.
+- **`SnackBar`에 `action`이 있으면 `persist`가 기본 `true`가 되어 `duration`을 무시한다.** 시간이 지나면 저절로 닫히게 하려면 `persist: false`를 함께 넘긴다.
 
 ## 폴더 구조
 
@@ -64,6 +68,7 @@ docs/specs/       기능별 명세
 - 키보드가 올라와도 입력칸과 주요 버튼이 가려지지 않게 한다.
 - UI와 무관한 로직(자동 태그 등)은 순수 Dart 클래스로 만들고 단위 테스트를 작성한다.
 - Material 3 기반.
+- **누를 때의 물결(ripple)·음영 효과는 쓰지 않는다.** `AppTheme`에서 `splashFactory`와 splash/highlight/hover 색을 끄고, 버튼류는 각 테마의 `overlayColor`를 투명으로 둔다. 새 버튼을 만들 때 따로 지정할 필요는 없다.
 
 ## 데이터 모델 (drift)
 
@@ -162,7 +167,7 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 
 | 명세 | 상태 |
 |---|---|
-| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 진행 중 — 1단계(프로젝트 기반), 2단계(데이터 계층), 3단계(자동 태그·평가 추천 엔진) 완료. 다음: 4단계 일지 작성 1단계 화면 |
+| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 진행 중 — 1단계(프로젝트 기반), 2단계(데이터 계층), 3단계(자동 태그·평가 추천 엔진), 4단계(일지 작성 1단계 화면 + 자동 저장) 완료. 다음: 5단계 태그·평가 확인 화면 |
 
 ## 향후 계획 (지금 구현하지 않음, 구조는 확장 가능하게)
 
