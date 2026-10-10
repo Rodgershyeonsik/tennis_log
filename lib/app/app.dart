@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'router.dart';
@@ -23,6 +24,14 @@ class TennisLogApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       routerConfig: router,
+      // 날짜 선택기처럼 Material이 직접 그리는 문구도 한국어로 나오게 한다.
+      // 지원 로케일을 한국어만 두면 기기 언어와 무관하게 한국어로 고정된다.
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('ko')],
     );
   }
 }
