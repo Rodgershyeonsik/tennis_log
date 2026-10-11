@@ -23,19 +23,21 @@
 
 ## 기술 스택
 
-| 패키지 | 용도 |
-|---|---|
-| `flutter_riverpod` 3.x + `riverpod_annotation` 4.x + `riverpod_generator` | 상태 관리. 코드 생성 방식(`@riverpod`) 사용 |
-| `go_router` | 라우팅 |
-| `drift` + `drift_flutter` (+ `drift_dev`) | 로컬 SQLite DB. Android와 웹 모두 지원 |
-| `freezed` 4.x (+ `freezed_annotation`) | 화면 상태 등 불변 모델 |
-| `json_serializable` (+ `json_annotation`) | 현재 미사용. 추후 백업/내보내기용 |
-| `build_runner` | drift, freezed, riverpod 코드 생성 |
-| `flutter_localizations` (Flutter SDK) | 날짜 선택기 등 Material이 직접 그리는 문구의 한국어 표기. 지원 로케일은 한국어 하나뿐이라 기기 언어와 무관하게 한국어로 나온다 |
+| 패키지                                                                    | 용도                                                                                                                           |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `flutter_riverpod` 3.x + `riverpod_annotation` 4.x + `riverpod_generator` | 상태 관리. 코드 생성 방식(`@riverpod`) 사용                                                                                    |
+| `go_router`                                                               | 라우팅                                                                                                                         |
+| `drift` + `drift_flutter` (+ `drift_dev`)                                 | 로컬 SQLite DB. Android와 웹 모두 지원                                                                                         |
+| `freezed` 4.x (+ `freezed_annotation`)                                    | 화면 상태 등 불변 모델                                                                                                         |
+| `json_serializable` (+ `json_annotation`)                                 | 현재 미사용. 추후 백업/내보내기용                                                                                              |
+| `build_runner`                                                            | drift, freezed, riverpod 코드 생성                                                                                             |
+| `flutter_localizations` (Flutter SDK)                                     | 날짜 선택기 등 Material이 직접 그리는 문구의 한국어 표기. 지원 로케일은 한국어 하나뿐이라 기기 언어와 무관하게 한국어로 나온다 |
 
 주의:
+
 - `riverpod_generator`는 설치된 `riverpod_annotation`과 호환되는 버전을 사용한다. (최초 설치 시 누락되어 있었음)
 - **freezed 4.x 문법**을 따른다. (3.x와 클래스 선언 방식이 다르다)
+- **freezed 모델에 getter를 두려면 `const X._();` private 생성자를 함께 선언해야 한다.** 없으면 `Getters require a MyClass._() constructor`로 코드 생성이 실패한다.
 - **drift 웹 설정**: `drift_flutter`의 웹 옵션을 사용하고, 웹에 필요한 파일(sqlite3 wasm, drift worker)을 `web/` 폴더에 둔다. drift 공식 문서의 웹 설정 가이드를 따른다.
 - 생성 코드(`*.g.dart`, `*.freezed.dart`)는 `dart run build_runner build`로 만든다.
 - **`@riverpod`로는 drift 생성 클래스(`Memo`, `Game`, `Place`, `Cue` 등)를 프로바이더 반환 타입에 쓸 수 없다.** 그 클래스들이 `app_database.g.dart`의 part 안에 선언돼 있어서 `riverpod_generator`가 `InvalidTypeException`으로 실패한다(typedef로 감싸도 같다). 이런 조회 프로바이더는 `StreamProvider`/`FutureProvider`로 **손으로 선언한다** — 예: `features/journal/presentation/entry/entry_providers.dart`. freezed 모델은 문제없다.
@@ -75,10 +77,12 @@ docs/specs/       기능별 명세
 enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때는 drift의 `schemaVersion`을 올리고 **마이그레이션을 작성해서 기존 데이터를 보존**한다.
 
 **places (장소)**: 장소 하나 = 코트 하나. 시설 단위 그룹은 두지 않는다.
+
 - id, name (유일), surface (hard / artificialGrass / clay / other), isIndoor (bool), createdAt, lastUsedAt
 - 같은 시설의 실내/야외 코트는 "귀뚜라미 실내", "귀뚜라미 야외"처럼 별개 장소로 등록한다.
 
 **sessions (일지 세션)**
+
 - id
 - sessionType: game / lesson / practice (기본값 game)
 - date (날짜)
@@ -93,36 +97,43 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 - createdAt, updatedAt
 
 **cues (큐)**
+
 - id, text (유일. 정규화: 앞뒤 공백 제거, 연속 공백 하나로. 같은 텍스트는 재사용), createdAt, lastUsedAt
 - Dart 쪽 getter 이름만 `cueText`다. drift의 `text()` 빌더와 이름이 겹쳐서 SQL 컬럼명(`text`)만 맞췄다.
 - 사용 횟수와 최근 적용 결과는 sessions에서 계산한다.
 
 **games (게임)**: 세션에 여러 개
+
 - id, sessionId (세션 삭제 시 함께 삭제)
 - format: womenDoubles(여복) / menDoubles(남복) / mixedDoubles(혼복) / openDoubles(잡복) / singles(단식)
 - myScore, opponentScore (둘 다 nullable, 스코어 모름 허용), orderIndex
 
 **memos (메모)**: 메모 한 줄 = 한 행. **조회·집계의 기본 단위.**
+
 - id, sessionId (세션 삭제 시 함께 삭제), content, orderIndex, createdAt, updatedAt
 - evaluation: good / bad / question (nullable)
 - evaluationStatus: suggested / confirmed (nullable. evaluation이 null이면 null)
 - lastTaggedContent: 자동 태그·평가 추천을 마지막으로 돌린 시점의 내용
 
 **tags (태그)**
+
 - id, name (유일), category: technique / form / footwork / situation / body / conditionFactor
 - parentTagId (nullable. 예: 백발리의 부모는 발리. 부모 태그로 조회하면 자식도 포함)
 - isArchived, createdAt
 - 메모와 태그는 **이름이 아니라 id로 연결**한다.
 
 **tagAliases (태그 인식 표현)**
+
 - id, tagId, alias, confidence: sure / ambiguous
 - (tagId, alias) 유일. 시드를 여러 번 돌려도 중복되지 않게 한다. alias 단독으로는 유일하지 않다(한 표현이 여러 태그에 걸릴 수 있다).
 - drift 행 클래스 이름은 `@DataClassName`으로 `TagAliasRow`로 지정했다. 기본 규칙(끝의 `s` 제거)으로는 `TagAliase`가 되고, `TagAlias`는 도메인 모델과 겹친다.
 
 **tagExclusions (제외 단어)**
+
 - id, tagId, word. 해당 태그의 표현이 이 단어 안에 포함돼 있으면 태그를 붙이지 않는다. (tagId, word) 유일.
 
 **memoTags (메모-태그 연결)**
+
 - memoId, tagId (복합 기본키)
 - source: auto / manual
 - status: confirmed / suggested / rejected
@@ -156,18 +167,18 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 
 ## 라우트
 
-| 경로 | 화면 |
-|---|---|
-| `/` | 메인 |
-| `/journal/new` | 새 일지 작성 (1단계) |
-| `/journal/:id` | 기존 일지 이어쓰기 (1단계) |
-| `/journal/:id/tags` | 태그·평가 확인 (2단계) |
+| 경로                | 화면                       |
+| ------------------- | -------------------------- |
+| `/`                 | 메인                       |
+| `/journal/new`      | 새 일지 작성 (1단계)       |
+| `/journal/:id`      | 기존 일지 이어쓰기 (1단계) |
+| `/journal/:id/tags` | 태그·평가 확인 (2단계)     |
 
 ## 구현 현황
 
-| 명세 | 상태 |
-|---|---|
-| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 진행 중 — 1단계(프로젝트 기반), 2단계(데이터 계층), 3단계(자동 태그·평가 추천 엔진), 4단계(일지 작성 1단계 화면 + 자동 저장) 완료. 다음: 5단계 태그·평가 확인 화면 |
+| 명세                                           | 상태                                                                                                                                                                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 진행 중 — 1단계(프로젝트 기반), 2단계(데이터 계층), 3단계(자동 태그·평가 추천 엔진), 4단계(일지 작성 1단계 화면 + 자동 저장), 5단계(태그·평가 확인 화면) 완료. 다음: 6단계(메인 화면 연결 + 일지 삭제) |
 
 ## 향후 계획 (지금 구현하지 않음, 구조는 확장 가능하게)
 

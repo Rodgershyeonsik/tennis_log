@@ -213,8 +213,8 @@ return $default(_that.memo,_that.tags);case _:
 /// @nodoc
 
 
-class _MemoWithTags implements MemoWithTags {
-  const _MemoWithTags({required this.memo, required  List<MemoTagView> tags}): _tags = tags;
+class _MemoWithTags extends MemoWithTags {
+  const _MemoWithTags({required this.memo, required  List<MemoTagView> tags}): _tags = tags,super._();
   
 
 @override final  Memo memo;
@@ -492,8 +492,8 @@ return $default(_that.tagId,_that.name,_that.category,_that.source,_that.status)
 /// @nodoc
 
 
-class _MemoTagView implements MemoTagView {
-  const _MemoTagView({required this.tagId, required this.name, required this.category, required this.source, required this.status});
+class _MemoTagView extends MemoTagView {
+  const _MemoTagView({required this.tagId, required this.name, required this.category, required this.source, required this.status}): super._();
   
 
 @override final  int tagId;

@@ -51,6 +51,25 @@ extension CueAppliedLabel on CueApplied {
   };
 }
 
+extension TagCategoryLabel on TagCategory {
+  String get label => switch (this) {
+    TagCategory.technique => '기술',
+    TagCategory.form => '폼',
+    TagCategory.footwork => '풋워크',
+    TagCategory.situation => '상황',
+    TagCategory.body => '신체',
+    TagCategory.conditionFactor => '컨디션',
+  };
+}
+
+extension MemoEvaluationLabel on MemoEvaluation {
+  String get label => switch (this) {
+    MemoEvaluation.good => '잘함',
+    MemoEvaluation.bad => '못함',
+    MemoEvaluation.question => '물음표',
+  };
+}
+
 /// 컨디션은 1~3 정수라서 열거형이 없다(명세의 데이터 모델).
 String conditionLabel(int score) => switch (score) {
   1 => '별로',
