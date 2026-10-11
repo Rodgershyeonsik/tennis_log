@@ -6,9 +6,29 @@ import '../../../core/db/database_provider.dart';
 import '../../../core/db/enums.dart';
 import '../domain/draft_summary.dart';
 import '../domain/session_draft.dart';
+import '../domain/session_list_item.dart';
 import '../domain/session_time_range.dart';
 
 part 'session_repository.g.dart';
+
+/// 삭제한 일지를 되돌리기 위한 꾸러미.
+///
+/// 세션을 지우면 games, memos, memo_tags가 cascade로 함께 사라지므로, 실행
+/// 취소로 일지를 그대로 되살리려면 딸린 행을 전부 들고 있어야 한다.
+/// (메모 하나의 [RemovedMemo]와 같은 방식이고, 범위만 세션 전체로 넓다.)
+class RemovedSession {
+  const RemovedSession({
+    required this.session,
+    required this.games,
+    required this.memos,
+    required this.memoTags,
+  });
+
+  final Session session;
+  final List<Game> games;
+  final List<Memo> memos;
+  final List<MemoTag> memoTags;
+}
 
 /// 세션(일지) 읽기·쓰기.
 class SessionRepository {
@@ -23,6 +43,99 @@ class SessionRepository {
   }
 
   // ------------------------------------------------------------ 메인 화면
+
+  /// 일지 목록 전체. 날짜가 최근인 것부터.
+  ///
+  /// 작성 중인 것까지 모두 담고, 메모 개수를 함께 센다. 메모가 있는지로
+  /// "1단계를 쓰다 말았는지"가 갈리기 때문이다.
+  Stream<List<SessionListItem>> watchAll() {
+    final memoCount = _db.memos.id.count();
+
+    final query =
+        _db.select(_db.sessions).join([
+            leftOuterJoin(
+              _db.places,
+              _db.places.id.equalsExp(_db.sessions.placeId),
+            ),
+            leftOuterJoin(
+              _db.memos,
+              _db.memos.sessionId.equalsExp(_db.sessions.id),
+            ),
+          ])
+          ..addColumns([memoCount])
+          // 메모 조인 때문에 세션이 메모 수만큼 늘어나므로 다시 묶는다.
+          ..groupBy([_db.sessions.id])
+          ..orderBy([
+            OrderingTerm.desc(_db.sessions.date),
+            OrderingTerm.desc(_db.sessions.id),
+          ]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        final session = row.readTable(_db.sessions);
+        final place = row.readTableOrNull(_db.places);
+        return SessionListItem(
+          id: session.id,
+          date: session.date,
+          sessionType: session.sessionType,
+          // 저장 전에는 스냅샷이 비어 있어서 현재 장소 이름을 쓴다.
+          placeName: session.placeNameSnapshot ?? place?.name,
+          memoCount: row.read(memoCount) ?? 0,
+          status: session.status,
+          tagReviewed: session.tagReviewed,
+        );
+      }).toList();
+    });
+  }
+
+  /// 일지를 지우고, 실행 취소에 필요한 정보를 돌려준다.
+  ///
+  /// 딸린 행은 cascade로 함께 지워진다. 장소·큐는 참조 관계라 남는다.
+  Future<RemovedSession?> remove(int sessionId) async {
+    return _db.transaction(() async {
+      final session = await findById(sessionId);
+      if (session == null) return null;
+
+      final games = await (_db.select(
+        _db.games,
+      )..where((t) => t.sessionId.equals(sessionId))).get();
+      final memos = await (_db.select(
+        _db.memos,
+      )..where((t) => t.sessionId.equals(sessionId))).get();
+
+      final memoIds = [for (final memo in memos) memo.id];
+      final memoTags = memoIds.isEmpty
+          ? const <MemoTag>[]
+          : await (_db.select(
+              _db.memoTags,
+            )..where((t) => t.memoId.isIn(memoIds))).get();
+
+      await (_db.delete(
+        _db.sessions,
+      )..where((t) => t.id.equals(sessionId))).go();
+
+      return RemovedSession(
+        session: session,
+        games: games,
+        memos: memos,
+        memoTags: memoTags,
+      );
+    });
+  }
+
+  /// 실행 취소. 원래 id와 순서, 메모의 태그 연결까지 그대로 되돌린다.
+  Future<void> restore(RemovedSession removed) async {
+    await _db.transaction(() async {
+      // 세션이 먼저 들어가야 games·memos의 외래키가 걸린다.
+      await _db.into(_db.sessions).insert(removed.session);
+      await _db.batch((batch) {
+        batch.insertAll(_db.games, removed.games);
+        batch.insertAll(_db.memos, removed.memos);
+        // memo_tags는 memos가 들어간 뒤여야 한다. 배치는 넣은 순서대로 돈다.
+        batch.insertAll(_db.memoTags, removed.memoTags);
+      });
+    });
+  }
 
   /// 작성 중(draft)인 일지 목록. 최근 것부터.
   Stream<List<DraftSummary>> watchDrafts() {

@@ -147,6 +147,7 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 - **삭제 규칙**: 부모가 사라지면 자식이 의미를 잃는 "소유" 관계면 cascade, 부모와 자식이 독립적으로 존재하는 "참조" 관계면 걸지 않는다(=부모 삭제가 거부된다).
   - cascade: `games.sessionId`, `memos.sessionId`, `memoTags.memoId`, `memoTags.tagId`, `tagAliases.tagId`, `tagExclusions.tagId`
   - cascade 없음: `sessions.placeId`, `sessions.cueId`, `tags.parentTagId`. 장소·큐·태그 삭제는 아직 만들지 않았다. 장소 삭제를 만들 때는 `SET NULL`로 바꾼다 — 스냅샷이 있으니 placeId만 비워도 과거 일지 표시는 그대로다.
+- **일지 삭제는 실행 취소를 받쳐야 하므로 지우기 전에 딸린 행을 전부 읽어 둔다** (`SessionRepository.remove` → `RemovedSession`). cascade로 사라진 games·memos·memoTags를 되돌리려면 그 행들이 필요하다. 복구는 세션을 먼저 넣고, 그다음 배치로 games → memos → memoTags 순으로 넣는다(외래키 순서).
 - **CHECK 제약**: `sessions.startMinutes`/`endMinutes`는 360~1440, `conditionScore`는 1~3. 종료가 시작보다 이른 값은 **DB가 막지 않는다** — 자동 저장은 필수값 검사 없이 저장해야 하므로 검증은 화면에서 한다.
 
 ### 태그 사전 시드

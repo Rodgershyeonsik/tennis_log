@@ -7,6 +7,7 @@ import 'package:tennis_log/features/journal/data/cue_repository.dart';
 import 'package:tennis_log/features/journal/data/place_repository.dart';
 import 'package:tennis_log/features/journal/data/session_repository.dart';
 import 'package:tennis_log/features/journal/domain/session_draft.dart';
+import 'package:tennis_log/features/journal/domain/session_list_item.dart';
 
 void main() {
   late AppDatabase db;
@@ -377,5 +378,178 @@ void main() {
     await repo.markTagReviewed(id);
 
     expect((await repo.findById(id))!.tagReviewed, isTrue);
+  });
+
+  group('remove / restore (일지 삭제와 실행 취소)', () {
+    /// 게임·메모·태그 연결까지 달린 일지 하나를 만든다.
+    Future<int> fullSession() async {
+      final id = await insertSession(date: DateTime(2026, 9, 29));
+      await db
+          .into(db.games)
+          .insert(
+            GamesCompanion.insert(
+              sessionId: id,
+              format: GameFormat.mixedDoubles,
+              myScore: const Value(6),
+              opponentScore: const Value(4),
+              orderIndex: 0,
+            ),
+          );
+      final memo = await db
+          .into(db.memos)
+          .insertReturning(
+            MemosCompanion.insert(
+              sessionId: id,
+              content: '백발리 안 됨',
+              orderIndex: 0,
+            ),
+          );
+      final tag =
+          await (db.select(db.tags)
+                ..where((t) => t.name.equals('백발리'))
+                ..limit(1))
+              .getSingle();
+      await db
+          .into(db.memoTags)
+          .insert(
+            MemoTagsCompanion.insert(
+              memoId: memo.id,
+              tagId: tag.id,
+              source: MemoTagSource.auto,
+              status: MemoTagStatus.suggested,
+            ),
+          );
+      return id;
+    }
+
+    test('딸린 게임·메모·태그 연결까지 함께 지운다', () async {
+      final id = await fullSession();
+
+      final removed = await repo.remove(id);
+
+      expect(removed, isNotNull);
+      expect(await repo.findById(id), isNull);
+      expect(await db.select(db.games).get(), isEmpty);
+      expect(await db.select(db.memos).get(), isEmpty);
+      expect(await db.select(db.memoTags).get(), isEmpty);
+    });
+
+    test('restore로 id와 태그 연결까지 그대로 되돌린다', () async {
+      final id = await fullSession();
+      final removed = await repo.remove(id);
+
+      await repo.restore(removed!);
+
+      expect((await repo.findById(id))!.id, id);
+      expect((await db.select(db.games).getSingle()).myScore, 6);
+      final memo = await db.select(db.memos).getSingle();
+      expect(memo.content, '백발리 안 됨');
+      final link = await db.select(db.memoTags).getSingle();
+      expect(link.memoId, memo.id);
+      expect(link.status, MemoTagStatus.suggested);
+    });
+
+    test('장소와 큐는 참조 관계라 일지를 지워도 남는다', () async {
+      final place = await places.create(
+        name: '귀뚜라미 실내',
+        surface: SurfaceType.hard,
+        isIndoor: true,
+      );
+      final cue = (await cues.findOrCreate('왼팔 뻗기'))!;
+      final id = await repo.createDraft(
+        SessionDraft(
+          date: DateTime(2026, 9, 29),
+          placeId: place.id,
+          cueId: cue.id,
+        ),
+      );
+
+      await repo.remove(id);
+
+      expect(await places.findById(place.id), isNotNull);
+      expect(await cues.mostRecent(), isNotNull);
+    });
+
+    test('없는 일지를 지우면 null이다', () async {
+      expect(await repo.remove(999), isNull);
+    });
+  });
+
+  group('watchAll (메인 화면 목록)', () {
+    Future<void> addMemos(int sessionId, List<String> contents) async {
+      for (final (index, content) in contents.indexed) {
+        await db
+            .into(db.memos)
+            .insert(
+              MemosCompanion.insert(
+                sessionId: sessionId,
+                content: content,
+                orderIndex: index,
+              ),
+            );
+      }
+    }
+
+    test('날짜가 최근인 것부터 돌려준다', () async {
+      await insertSession(date: DateTime(2026, 9, 20));
+      await insertSession(date: DateTime(2026, 9, 29));
+      await insertSession(date: DateTime(2026, 9, 25));
+
+      final items = await repo.watchAll().first;
+
+      expect(items.map((i) => i.date.day), [29, 25, 20]);
+    });
+
+    test('메모 개수를 세고, 메모가 없으면 0이다', () async {
+      final withMemos = await insertSession(date: DateTime(2026, 9, 29));
+      await addMemos(withMemos, ['서브 개굿', '백발리 안 됨', '포칭 먹힘']);
+      await insertSession(date: DateTime(2026, 9, 20));
+
+      final items = await repo.watchAll().first;
+
+      expect(items.map((i) => i.memoCount), [3, 0]);
+    });
+
+    test('진행 단계를 상태와 tagReviewed로 가른다', () async {
+      final writing = await insertSession(date: DateTime(2026, 9, 29));
+      final saved = await insertSession(date: DateTime(2026, 9, 25));
+      final reviewed = await insertSession(date: DateTime(2026, 9, 20));
+      await addMemos(saved, ['저장까지 함']);
+      await addMemos(reviewed, ['태그까지 봄']);
+      await repo.finalizeSession(saved);
+      await repo.finalizeSession(reviewed);
+      await repo.markTagReviewed(reviewed);
+
+      final items = await repo.watchAll().first;
+      final byId = {for (final item in items) item.id: item.progress};
+
+      expect(byId[writing], JournalProgress.writing);
+      expect(byId[saved], JournalProgress.saved);
+      expect(byId[reviewed], JournalProgress.reviewed);
+    });
+
+    test('장소는 스냅샷을 먼저 쓰고, 저장 전에는 현재 이름을 쓴다', () async {
+      final place = await places.create(
+        name: '귀뚜라미 실내',
+        surface: SurfaceType.hard,
+        isIndoor: true,
+      );
+      final id = await repo.createDraft(
+        SessionDraft(date: DateTime(2026, 9, 29), placeId: place.id),
+      );
+
+      // 저장 전에는 스냅샷이 비어 있어서 현재 장소 이름이 나온다.
+      expect((await repo.watchAll().first).single.placeName, '귀뚜라미 실내');
+
+      await addMemos(id, ['메모']);
+      await repo.finalizeSession(id);
+      // 장소 수정 기능은 아직 없어서 DB를 직접 고친다.
+      await (db.update(db.places)..where((t) => t.id.equals(place.id))).write(
+        const PlacesCompanion(name: Value('이름 바뀜')),
+      );
+
+      // 저장 뒤에는 스냅샷이 남아서 장소 이름을 고쳐도 그대로다.
+      expect((await repo.watchAll().first).single.placeName, '귀뚜라미 실내');
+    });
   });
 }
