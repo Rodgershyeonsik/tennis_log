@@ -308,6 +308,45 @@ void main() {
     });
   });
 
+  group('태그 확인 완료 되돌리기', () {
+    Future<bool> tagReviewed() async => (await (db.select(
+      db.sessions,
+    )..where((t) => t.id.equals(sessionId))).getSingle()).tagReviewed;
+
+    Future<void> markReviewed() =>
+        (db.update(db.sessions)..where((t) => t.id.equals(sessionId))).write(
+          const SessionsCompanion(tagReviewed: Value(true)),
+        );
+
+    test('새로 처리한 메모가 있으면 태그 확인 전으로 되돌린다', () async {
+      await insertMemo('오늘 서브 개굿', lastTaggedContent: '오늘 서브 개굿');
+      await markReviewed();
+      await insertMemo('왼쪽 어깨 아픔');
+
+      await applier.applyToSession(sessionId);
+
+      expect(await tagReviewed(), isFalse);
+    });
+
+    test('고친 메모가 있어도 되돌린다', () async {
+      await insertMemo('오늘 서브 개굿', lastTaggedContent: '오늘 서브');
+      await markReviewed();
+
+      await applier.applyToSession(sessionId);
+
+      expect(await tagReviewed(), isFalse);
+    });
+
+    test('처리한 메모가 없으면 그대로 둔다', () async {
+      await insertMemo('오늘 서브 개굿', lastTaggedContent: '오늘 서브 개굿');
+      await markReviewed();
+
+      await applier.applyToSession(sessionId);
+
+      expect(await tagReviewed(), isTrue);
+    });
+  });
+
   group('추천 개수', () {
     test('세션 전체의 suggested 태그·평가 수를 돌려준다', () async {
       await insertMemo('왼쪽 어깨 아픔'); // #유닛턴 suggested, 평가 없음

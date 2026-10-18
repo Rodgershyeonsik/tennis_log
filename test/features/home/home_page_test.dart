@@ -114,6 +114,25 @@ void main() {
     await closePage(tester);
   });
 
+  testWidgets('메모가 없는 일지에는 태그 버튼이 없다', (tester) async {
+    await addSession(DateTime(2026, 9, 29));
+    final withMemo = await addSession(DateTime(2026, 9, 25));
+    await addMemo(withMemo, '서브 개굿');
+    await pumpPage(tester);
+
+    expect(find.byTooltip('태그 확인'), findsOneWidget);
+    // 버튼 자리는 비워 둬서 두 줄 높이가 같다.
+    final rows = find.byWidgetPredicate(
+      (w) => w is Material && w.borderRadius != null,
+    );
+    expect(
+      tester.getSize(rows.at(0)).height,
+      tester.getSize(rows.at(1)).height,
+    );
+
+    await closePage(tester);
+  });
+
   testWidgets('밀어서 지우면 실행 취소로 되돌릴 수 있다', (tester) async {
     final id = await addSession(DateTime(2026, 9, 29));
     await addMemo(id, '백발리 안 됨');
@@ -145,7 +164,10 @@ void main() {
     await addSession(DateTime(2026, 9, 29));
     await pumpPage(tester);
 
-    await tester.drag(find.byTooltip('태그 확인'), const Offset(500, 0));
+    await tester.drag(
+      find.text(Formatters.dateWithWeekday(DateTime(2026, 9, 29))),
+      const Offset(500, 0),
+    );
     await tester.pumpAndSettle();
 
     expect(await db.select(db.sessions).get(), isEmpty);

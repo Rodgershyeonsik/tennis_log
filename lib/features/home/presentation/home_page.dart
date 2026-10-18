@@ -179,11 +179,17 @@ class _SessionRow extends StatelessWidget {
                 ),
               ),
               // 2단계로 바로 가는 길. 목록을 둔 이유가 이것이다.
-              IconButton(
-                onPressed: () => context.push(JournalRoutes.tagReview(item.id)),
-                icon: const Icon(Icons.sell_outlined),
-                tooltip: '태그 확인',
-              ),
+              // 메모가 없으면 확인할 태그도 없어서 감춘다. 자리는 그대로 비워
+              // 둬야 버튼 있는 줄과 높이가 같다.
+              if (item.memoCount > 0)
+                IconButton(
+                  onPressed: () =>
+                      context.push(JournalRoutes.tagReview(item.id)),
+                  icon: const Icon(Icons.sell_outlined),
+                  tooltip: '태그 확인',
+                )
+              else
+                const SizedBox.square(dimension: kMinInteractiveDimension),
             ],
           ),
         ),

@@ -70,6 +70,13 @@ class AutoTagApplier {
         await _applyToMemo(memo, tagger);
         count++;
       }
+
+      // 새로 쓰거나 고친 메모가 있으면 2단계를 다시 거쳐야 한다. 태그 확인을
+      // 끝낸 일지라도 "태그 확인 전"으로 되돌려 메인 배지가 맞게 보이게 한다.
+      if (count > 0) {
+        await (_db.update(_db.sessions)..where((t) => t.id.equals(sessionId)))
+            .write(const SessionsCompanion(tagReviewed: Value(false)));
+      }
       return count;
     });
 
