@@ -32,6 +32,8 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+# DevTools 확장 설정. 혼자 쓰는 프로젝트라 공유할 내용이 없다.
+devtools_options.yaml
 
 # Symbolication related
 app.*.symbols
