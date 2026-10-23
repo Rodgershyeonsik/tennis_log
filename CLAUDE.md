@@ -19,7 +19,7 @@
 - 데이터는 **로컬 저장만** 한다. 서버, 로그인, 동기화 없음.
 - 웹 개발 중 데이터와 Android 실기기 데이터는 서로 별개다.
 - UI 문구는 모두 **한국어**.
-- 날짜 표시는 `intl` 없이 직접 포맷한다. 긴 형식 `2026년 10월 9일 금요일`(작성 화면 일시), 짧은 형식 `26/9/22 금`(목록), 시각 `18:00`. (`lib/core/util/formatters.dart`. `flutter_localizations`가 intl을 끌고 오지만 날짜·시간 표기는 계속 직접 만든다.)
+- 날짜 표시는 `intl` 없이 직접 포맷한다. 긴 형식 `2026년 10월 9일 금요일`(작성 화면 일시), 짧은 형식 `26/9/22 금`(목록), 시각 `18:00`. (`lib/ui/core/formatters.dart`. `flutter_localizations`가 intl을 끌고 오지만 날짜·시간 표기는 계속 직접 만든다.)
 
 ## 기술 스택
 
@@ -40,7 +40,7 @@
 - **freezed 모델에 getter를 두려면 `const X._();` private 생성자를 함께 선언해야 한다.** 없으면 `Getters require a MyClass._() constructor`로 코드 생성이 실패한다.
 - **drift 웹 설정**: `drift_flutter`의 웹 옵션을 사용하고, 웹에 필요한 파일(sqlite3 wasm, drift worker)을 `web/` 폴더에 둔다. drift 공식 문서의 웹 설정 가이드를 따른다.
 - 생성 코드(`*.g.dart`, `*.freezed.dart`)는 `dart run build_runner build`로 만든다.
-- **`@riverpod`로는 drift 생성 클래스(`Memo`, `Game`, `Place`, `Cue` 등)를 프로바이더 반환 타입에 쓸 수 없다.** 그 클래스들이 `app_database.g.dart`의 part 안에 선언돼 있어서 `riverpod_generator`가 `InvalidTypeException`으로 실패한다(typedef로 감싸도 같다). 이런 조회 프로바이더는 `StreamProvider`/`FutureProvider`로 **손으로 선언한다** — 예: `features/journal/presentation/entry/entry_providers.dart`. freezed 모델은 문제없다.
+- **`@riverpod`로는 drift 생성 클래스(`Memo`, `Game`, `Place`, `Cue` 등)를 프로바이더 반환 타입에 쓸 수 없다.** 그 클래스들이 `app_database.g.dart`의 part 안에 선언돼 있어서 `riverpod_generator`가 `InvalidTypeException`으로 실패한다(typedef로 감싸도 같다). 이런 조회 프로바이더는 `StreamProvider`/`FutureProvider`로 **손으로 선언한다** — 예: `ui/journal/entry/entry_providers.dart`. freezed 모델은 문제없다.
 - riverpod 3에는 `AsyncValue.valueOrNull`이 없다. 값이 nullable인 `.value`를 쓴다.
 - **`SnackBar`에 `action`이 있으면 `persist`가 기본 `true`가 되어 `duration`을 무시한다.** 시간이 지나면 저절로 닫히게 하려면 `persist: false`를 함께 넘긴다.
 
@@ -49,18 +49,25 @@
 ```
 lib/
   main.dart
-  app/            라우터, 테마
-  core/db/        drift DB, 테이블, 시드, 마이그레이션
-  features/
+  app/              라우터, 테마
+  data/
+    db/             drift DB, 테이블, 시드, 마이그레이션
+    repositories/   세션, 메모, 태그, 장소, 큐. 테이블 단위 읽기·쓰기. 모든 기능이 공유
+  domain/
+    tagging/        자동 태그 엔진 (AutoTagger, TagDictionary, AutoTagResult)
+    models/         여러 기능이 같이 쓰는 모델 (freezed), 시간 계산
+    use_cases/      여러 리포지토리에 걸친 규칙 하나를 실행하는 작업 (저장 시 자동 태그 적용 AutoTagApplier)
+  ui/
+    core/           날짜 포맷(formatters), enum 한국어 표기(labels)
+      widgets/      칩 그룹, 분할 버튼, 스테퍼 등 공용 위젯
     home/
-    journal/
-      data/          리포지토리
-      domain/        자동 태그 엔진, 도메인 모델
-      presentation/  화면, 하단 시트, 위젯, 상태(notifier)
-    (새 기능은 같은 구조로 features/ 아래에 추가)
-test/
-docs/specs/       기능별 명세
+    journal/        화면, 하단 시트, 위젯, notifier만 (entry/ 작성, review/ 태그·평가 확인)
+    (search/, stats/, tags/ ...)
+test/               lib/와 같은 구조 (support/는 테스트 공용 헬퍼)
+docs/specs/         기능별 명세
 ```
+
+- 기능(화면)끼리는 서로 import하지 않는다. 둘 이상의 화면이 쓰는 것은 `data/`, `domain/`, `ui/core/`로 올린다.
 
 ## 코드 작성 원칙
 
@@ -152,10 +159,10 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 
 ### 태그 사전 시드
 
-- 기본 태그 사전(태그 58개 + 인식 표현 176개 + 제외 단어 7개)은 `lib/core/db/seed/tag_seed_data.dart`에 **순수 Dart 상수**로 두고, `tag_seeder.dart`가 `beforeOpen`에서 넣는다.
+- 기본 태그 사전(태그 58개 + 인식 표현 176개 + 제외 단어 7개)은 `lib/data/db/seed/tag_seed_data.dart`에 **순수 Dart 상수**로 두고, `tag_seeder.dart`가 `beforeOpen`에서 넣는다.
 - `onCreate`가 아니라 `beforeOpen`인 이유: Android와 웹이 각각 별개 DB라 양쪽 첫 실행을 모두 덮어야 하고, 이미 테이블이 만들어진 개발 환경에도 시드가 들어가야 한다. `tags`가 비어 있을 때만 실제로 동작한다.
 - **시드는 최초 1회만 돈다.** 이미 설치된 앱에 태그를 추가하려면 마이그레이션이 따로 필요하다.
-- 명세(`docs/specs/01_journal_entry.md` 7번)를 고치면 `tag_seed_data.dart`도 함께 고친다. `test/core/db/tag_seeder_test.dart`가 카테고리별 개수와 confidence 표기를 검증한다.
+- 명세(`docs/specs/01_journal_entry.md` 7번)를 고치면 `tag_seed_data.dart`도 함께 고친다. `test/data/db/tag_seeder_test.dart`가 카테고리별 개수와 confidence 표기를 검증한다.
 - `AppDatabase`를 열면 항상 시드가 들어가므로, **테스트에서 tags는 비어 있지 않다.** 태그를 만드는 테스트는 시드와 겹치지 않는 이름을 쓴다.
 
 ### 웹(Chrome) DB

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tennis_log/app/app.dart';
-import 'package:tennis_log/core/db/app_database.dart';
-import 'package:tennis_log/core/db/database_provider.dart';
+import 'package:tennis_log/data/db/app_database.dart';
+import 'package:tennis_log/data/db/database_provider.dart';
 
 /// Material이 직접 그리는 문구(날짜 선택기 등)가 한국어로 나오는지 본다.
 ///

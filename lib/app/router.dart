@@ -1,9 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../features/home/presentation/home_page.dart';
-import '../features/journal/presentation/entry/journal_entry_page.dart';
-import '../features/journal/presentation/review/tag_review_page.dart';
+import '../ui/home/home_page.dart';
+import '../ui/journal/entry/journal_entry_page.dart';
+import '../ui/journal/review/tag_review_page.dart';
 
 // 이 파일과 짝이 되는 생성 코드. `dart run build_runner build`로 만들어진다.
 part 'router.g.dart';

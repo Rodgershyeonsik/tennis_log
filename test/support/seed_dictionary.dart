@@ -1,6 +1,6 @@
-import 'package:tennis_log/core/db/enums.dart';
-import 'package:tennis_log/core/db/seed/tag_seed_data.dart';
-import 'package:tennis_log/features/journal/domain/tag_dictionary.dart';
+import 'package:tennis_log/data/db/enums.dart';
+import 'package:tennis_log/data/db/seed/tag_seed_data.dart';
+import 'package:tennis_log/domain/tagging/tag_dictionary.dart';
 
 /// 시드 상수(`tagSeeds`)를 DB 없이 [TagDictionary]로 바꾼 것.
 ///

@@ -124,39 +124,26 @@ flutter test                  # 단위·위젯 테스트 269개
 
 ```
 lib/
-  app/            라우터, 테마
-  core/db/        drift 스키마, 시드, DB 설정
-  features/
-    home/         일지 목록
-    journal/
-      data/          리포지토리, 저장 시 자동 태그 적용
-      domain/        자동 태그 엔진(순수 Dart), 도메인 모델
-      presentation/  작성·확인 화면, 하단 시트, 재사용 위젯
-docs/specs/       기능별 명세
-```
-
-지금 구조에서 태그, 메모, 세션 리포지토리는 `features/journal/data/` 안에 들어가는데, 앞으로 만들 검색, 통계, 태그 관리가 이걸 전부 다시 씁니다.  
-그러면 `features/search`가 `features/journal/data`를 가져다 쓰는 기능 간 의존이 생기는 한계가 있어 아래와 같은 구조로 개편할 계획입니다.
-
-```
-lib/
   app/              라우터, 테마
   data/
-    db/             drift DB, 테이블, 시드, 마이그레이션
+    db/             drift 스키마, 시드, DB 설정
     repositories/   세션, 메모, 태그, 장소, 큐 (모든 기능이 공유)
   domain/
-    tagging/        자동 태그 엔진
+    tagging/        자동 태그 엔진(순수 Dart)
     models/         여러 기능이 같이 쓰는 모델
+    use_cases/      여러 리포지토리에 걸친 작업 (저장 시 자동 태그 적용)
   ui/
-    core/           칩 그룹, 분할 버튼, 스테퍼 등 공용 위젯
-    home/
-    journal/        화면, 위젯, notifier만
-    (search/, stats/, tags/ ...)
+    core/           날짜 포맷, 칩 그룹, 분할 버튼, 스테퍼 등 공용 위젯
+    home/           일지 목록
+    journal/        작성·확인 화면, 하단 시트, notifier
+docs/specs/         기능별 명세
 ```
+
+처음에는 `features/journal/` 아래에 리포지토리, 도메인 모델, 화면을 함께 두었습니다.  
+그런데 앞으로 만들 검색, 통계, 태그 관리가 태그·메모·세션 리포지토리를 전부 다시 씁니다. 그대로 두면 `features/search`가 `features/journal/data`를 가져다 쓰는 기능 간 의존이 생기기 때문에, 여러 기능이 공유하는 계층(`data/`, `domain/`, `ui/core/`)을 화면과 분리했습니다. 새 기능은 `ui/` 아래에 화면만 추가합니다.
 
 ## 다음 계획
 
-- 기능 간 공유 계층을 분리하는 폴더 구조 개편 (위 '구조' 참고)
 - 태그·상황별 검색과 통계 화면 (예: 컨디션별 bad 메모 비율, 큐 적용률)
 - 태그 관리 (이름 변경, 병합, 인식 표현 편집)
 - 사용자가 고친 태그로부터 사전 학습
