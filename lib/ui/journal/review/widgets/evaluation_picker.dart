@@ -72,6 +72,7 @@ class EvaluationPicker extends StatelessWidget {
         theme.brightness == Brightness.dark ? _goodDark : _goodLight,
       MemoEvaluation.bad => theme.colorScheme.error,
       MemoEvaluation.question => theme.colorScheme.primary,
+      MemoEvaluation.none => theme.colorScheme.onSurfaceVariant,
     };
   }
 }
@@ -171,6 +172,8 @@ class _EvaluationIcon extends StatelessWidget {
       MemoEvaluation.bad =>
         filled ? Icons.thumb_down : Icons.thumb_down_outlined,
       MemoEvaluation.question => filled ? Icons.help : Icons.help_outline,
+      MemoEvaluation.none =>
+        filled ? Icons.remove_circle : Icons.remove_circle_outline,
     };
   }
 }

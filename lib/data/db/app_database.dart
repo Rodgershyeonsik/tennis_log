@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 import 'enums.dart';
+import 'migrations/v2_evaluation_none.dart';
 import 'seed/tag_seeder.dart';
 import 'tables.dart';
 
@@ -34,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// 스키마를 바꿀 때마다 올리고, [migration]에 마이그레이션을 추가한다.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   /// DateTime을 유닉스 초(기본값)가 아니라 ISO-8601 텍스트로 저장한다.
   ///
@@ -50,6 +51,13 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
+    },
+    onUpgrade: (m, from, to) async {
+      // 버전마다 순서대로 올린다. 오래된 DB도 중간 단계를 빠짐없이 거친다.
+      if (from < 2) {
+        // 평가 값 none 추가(02). 테이블 구조는 그대로이고 데이터만 맞춘다.
+        await transaction(() => migrateToV2EvaluationNone(this));
+      }
     },
     beforeOpen: (details) async {
       // SQLite는 외래키 제약이 기본으로 꺼져 있고 **커넥션마다** 켜야 한다.

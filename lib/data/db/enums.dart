@@ -24,8 +24,11 @@ enum SessionStatus { draft, complete }
 /// 게임 형태
 enum GameFormat { womenDoubles, menDoubles, mixedDoubles, openDoubles, singles }
 
-/// 메모 평가
-enum MemoEvaluation { good, bad, question }
+/// 메모 평가.
+///
+/// none은 "평가 없음"으로 **확정할 수 있는 값**이다. evaluation이 null인
+/// "고르지 않음"(아직 아무도 안 봄)과 다르다. (02에서 추가)
+enum MemoEvaluation { good, bad, question, none }
 
 /// 평가가 자동 추천값인지, 사용자가 확인한 값인지.
 ///

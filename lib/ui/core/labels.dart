@@ -67,6 +67,7 @@ extension MemoEvaluationLabel on MemoEvaluation {
     MemoEvaluation.good => '잘함',
     MemoEvaluation.bad => '못함',
     MemoEvaluation.question => '물음표',
+    MemoEvaluation.none => '없음',
   };
 }
 
