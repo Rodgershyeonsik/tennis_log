@@ -250,12 +250,27 @@ void main() {
       expect(memo.evaluationStatus, EvaluationStatus.suggested);
     });
 
-    test('추천 결과가 없으면 suggested 평가를 비운다', () async {
+    test('키워드가 없으면 suggested 평가를 none 추천으로 바꾼다', () async {
       final memoId = await insertMemo(
-        '세컨 토스 침착하게 올림',
+        '토스 높게',
         evaluation: MemoEvaluation.bad,
         evaluationStatus: EvaluationStatus.suggested,
-        lastTaggedContent: '세컨 토스 안 됨ㅠ',
+        lastTaggedContent: '토스 안 됨ㅠ',
+      );
+
+      await applier.applyToSession(sessionId);
+
+      final memo = await readMemo(memoId);
+      expect(memo.evaluation, MemoEvaluation.none);
+      expect(memo.evaluationStatus, EvaluationStatus.suggested);
+    });
+
+    test('판단 보류(null)면 suggested 평가를 비운다', () async {
+      final memoId = await insertMemo(
+        '서브는 잘됨 근데 리턴은 안됨',
+        evaluation: MemoEvaluation.bad,
+        evaluationStatus: EvaluationStatus.suggested,
+        lastTaggedContent: '리턴은 안됨',
       );
 
       await applier.applyToSession(sessionId);
@@ -349,15 +364,15 @@ void main() {
 
   group('추천 개수', () {
     test('세션 전체의 suggested 태그·평가 수를 돌려준다', () async {
-      await insertMemo('왼쪽 어깨 아픔'); // #유닛턴 suggested, 평가 없음
-      await insertMemo('백발리 여전히 안 됨ㅠㅠ'); // #백발리 confirmed, 평가 suggested
-      await insertMemo('파트너 때문에 멘탈 흔들림'); // #파트너멘탈 suggested
+      await insertMemo('왼쪽 어깨 아픔'); // #유닛턴 suggested, none 추천
+      await insertMemo('백발리 여전히 안 됨ㅠㅠ'); // #백발리 confirmed, bad 추천
+      await insertMemo('파트너 때문에 멘탈 흔들림'); // #파트너멘탈 suggested, none 추천
 
       final result = await applier.applyToSession(sessionId);
 
       expect(result.processedMemoCount, 3);
       expect(result.suggestedTagCount, 2);
-      expect(result.suggestedEvaluationCount, 1);
+      expect(result.suggestedEvaluationCount, 3);
     });
 
     test('메모가 없으면 아무 일도 하지 않는다', () async {

@@ -1,5 +1,6 @@
 import '../../data/db/enums.dart';
 import 'auto_tag_result.dart';
+import 'evaluation_suggester.dart';
 import 'tag_dictionary.dart';
 
 /// 메모 텍스트에 붙을 태그와 추천 평가를 계산하는 **순수 엔진**.
@@ -79,7 +80,7 @@ class AutoTagger {
 
     return MemoAnalysis(
       tags: tags,
-      evaluation: _suggestEvaluation(haystack.normalized),
+      evaluation: suggestEvaluation(haystack.normalized),
     );
   }
 
@@ -114,23 +115,6 @@ class AutoTagger {
       final parentId = _parentByTag[tagId];
       if (parentId != null) statusByTag.remove(parentId);
     }
-  }
-
-  MemoEvaluation? _suggestEvaluation(String normalized) {
-    bool hasAny(List<String> keywords) => keywords.any(normalized.contains);
-
-    // question이 섞여 있으면 질문으로 본다.
-    if (hasAny(_questionKeywords)) return MemoEvaluation.question;
-
-    final good = hasAny(_goodKeywords);
-    final bad = hasAny(_badKeywords);
-
-    // 좋고 나쁨이 한 줄에 같이 있으면 판단을 보류한다.
-    // 예: "서브는 잘됨 근데 리턴은 안됨"
-    if (good && bad) return null;
-    if (good) return MemoEvaluation.good;
-    if (bad) return MemoEvaluation.bad;
-    return null;
   }
 
   static List<_AliasGroup> _buildGroups(TagDictionary dictionary) {
@@ -178,11 +162,6 @@ class AutoTagger {
     return b;
   }
 }
-
-/// 평가 추천 키워드. 태그 사전과 달리 DB에 두지 않고 상수로 박아 둔다(명세 6번).
-const _goodKeywords = ['짱', '굿', '개굿', '잘 됨', '잘됨'];
-const _badKeywords = ['안됨', '안 됨', 'ㅠ', 'ㅠㅠ'];
-const _questionKeywords = ['?'];
 
 /// 소문자로 바꾸고 연속 공백을 하나로 줄인다. **앞뒤 공백은 남긴다.**
 ///

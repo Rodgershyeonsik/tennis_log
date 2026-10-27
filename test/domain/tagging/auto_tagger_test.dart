@@ -58,7 +58,8 @@ void main() {
         evaluationOf('다운더라인 맞을 때 대기 위치 센터가 맞는지?'),
         MemoEvaluation.question,
       );
-      expect(evaluationOf('세컨 토스 침착하게 올리니까 잘 들어감'), isNull);
+      expect(evaluationOf('세컨 토스 침착하게 올리니까 잘 들어감'), MemoEvaluation.none);
+      expect(evaluationOf('포인트 몇 개 땀'), MemoEvaluation.none);
       expect(evaluationOf('오늘 서브 개굿'), MemoEvaluation.good);
       expect(evaluationOf('백발리 여전히 안 됨ㅠㅠ'), MemoEvaluation.bad);
       expect(evaluationOf('서브는 잘됨 근데 리턴은 안됨'), isNull);
@@ -229,12 +230,12 @@ void main() {
       expect(evaluationOf('개굿인데 왜지?'), MemoEvaluation.question);
     });
 
-    test('good과 bad가 동시에 매칭되면 추천하지 않는다', () {
+    test('good과 bad가 동시에 매칭되면 판단 보류(null)', () {
       expect(evaluationOf('서브는 잘됨 근데 리턴은 안됨'), isNull);
     });
 
-    test('키워드가 없으면 추천하지 않는다', () {
-      expect(evaluationOf('세컨 토스 침착하게 올림'), isNull);
+    test('키워드가 없으면 none', () {
+      expect(evaluationOf('세컨 토스 침착하게 올림'), MemoEvaluation.none);
     });
   });
 
