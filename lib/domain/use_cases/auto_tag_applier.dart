@@ -39,7 +39,8 @@ class AutoTagApplyResult {
 /// - 내용이 `lastTaggedContent`와 다른 메모만 다시 처리한다.
 /// - manual 태그와 rejected 태그는 건드리지 않는다.
 /// - 내용이 바뀐 메모의 기존 auto 태그 중 새 결과에 없는 것은 지운다.
-/// - evaluationStatus가 confirmed인 평가는 절대 덮어쓰지 않는다.
+/// - evaluationStatus가 confirmed인 평가는 덮어쓰지 않는다. 단, confirmed none은
+///   새 결과가 잘함·못함·물음표면 그 결과를 suggested로 추천한다.
 class AutoTagApplier {
   AutoTagApplier(this._db, this._tagRepository);
 
@@ -143,7 +144,13 @@ class AutoTagApplier {
 
     // 3) 평가. confirmed는 건드리지 않고, 비어 있거나 suggested면 새 결과로 바꾼다.
     //    (새 결과가 없으면 비운다.)
-    final keepEvaluation = memo.evaluationStatus == EvaluationStatus.confirmed;
+    //    예외: confirmed none은 "그 내용엔 평가할 게 없다"는 판단이라, 고친
+    //    내용에 잘함·못함·물음표 키워드가 생기면 새 결과를 추천한다(명세 02).
+    final reopenNone =
+        memo.evaluation == MemoEvaluation.none &&
+        _isJudgement(analysis.evaluation);
+    final keepEvaluation =
+        memo.evaluationStatus == EvaluationStatus.confirmed && !reopenNone;
 
     await (_db.update(_db.memos)..where((t) => t.id.equals(memo.id))).write(
       MemosCompanion(
@@ -161,6 +168,14 @@ class AutoTagApplier {
       ),
     );
   }
+
+  /// 잘함·못함·물음표처럼 평가할 거리가 있다는 추천인지. none과 판단 보류(null)는 아니다.
+  static bool _isJudgement(MemoEvaluation? evaluation) => switch (evaluation) {
+    MemoEvaluation.good ||
+    MemoEvaluation.bad ||
+    MemoEvaluation.question => true,
+    MemoEvaluation.none || null => false,
+  };
 
   Future<void> _setStatus(int memoId, int tagId, MemoTagStatus status) {
     return (_db.update(_db.memoTags)

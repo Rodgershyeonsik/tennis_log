@@ -265,6 +265,58 @@ void main() {
       expect(memo.evaluationStatus, EvaluationStatus.suggested);
     });
 
+    test('suggested none은 새 키워드가 생기면 그 평가로 바뀐다', () async {
+      final memoId = await insertMemo(
+        '백발리 안 됨ㅠ',
+        evaluation: MemoEvaluation.none,
+        evaluationStatus: EvaluationStatus.suggested,
+        lastTaggedContent: '백발리',
+      );
+
+      await applier.applyToSession(sessionId);
+
+      final memo = await readMemo(memoId);
+      expect(memo.evaluation, MemoEvaluation.bad);
+      expect(memo.evaluationStatus, EvaluationStatus.suggested);
+    });
+
+    group('confirmed none', () {
+      Future<Memo> editConfirmedNone(String newContent) async {
+        final memoId = await insertMemo(
+          newContent,
+          evaluation: MemoEvaluation.none,
+          evaluationStatus: EvaluationStatus.confirmed,
+          lastTaggedContent: '토스',
+        );
+        await applier.applyToSession(sessionId);
+        return readMemo(memoId);
+      }
+
+      test('잘함 키워드가 생기면 잘함 추천으로 바뀐다', () async {
+        final memo = await editConfirmedNone('오늘 서브 개굿');
+        expect(memo.evaluation, MemoEvaluation.good);
+        expect(memo.evaluationStatus, EvaluationStatus.suggested);
+      });
+
+      test('물음표 키워드가 생겨도 다시 추천한다', () async {
+        final memo = await editConfirmedNone('토스 높게 해야 하나?');
+        expect(memo.evaluation, MemoEvaluation.question);
+        expect(memo.evaluationStatus, EvaluationStatus.suggested);
+      });
+
+      test('새 결과도 none이면 확정을 유지한다', () async {
+        final memo = await editConfirmedNone('토스 높게');
+        expect(memo.evaluation, MemoEvaluation.none);
+        expect(memo.evaluationStatus, EvaluationStatus.confirmed);
+      });
+
+      test('판단 보류(null)면 확정을 유지한다', () async {
+        final memo = await editConfirmedNone('서브는 잘됨 근데 리턴은 안됨');
+        expect(memo.evaluation, MemoEvaluation.none);
+        expect(memo.evaluationStatus, EvaluationStatus.confirmed);
+      });
+    });
+
     test('판단 보류(null)면 suggested 평가를 비운다', () async {
       final memoId = await insertMemo(
         '서브는 잘됨 근데 리턴은 안됨',
