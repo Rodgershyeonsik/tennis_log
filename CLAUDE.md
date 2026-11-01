@@ -101,6 +101,7 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 - cueId (nullable), cueApplied: yes / partial / no (nullable). 큐를 게임 중 의식적으로 적용했는지
 - status: draft / complete (메모가 1개 이상이면 complete)
 - tagReviewed (bool): 태그·평가 확인 단계 완료 여부. 저장 버튼에서 다시 추천을 돌린 메모(새로 쓰거나 고친 메모)가 있으면 false로 되돌린다(`AutoTagApplier`)
+  - **불변식 (02에서 변경)**: tagReviewed = true인 세션은 모든 메모의 evaluationStatus가 confirmed이고(evaluation이 null인 메모가 없다), memoTags에 suggested 행이 없다. 2단계 완료 버튼이 남은 추천을 확정하고 null 평가를 none으로 채운 뒤에 true로 바꾼다. 조회·통계는 이 불변식에 기대어 확인 완료 일지의 값만 쓴다.
 - createdAt, updatedAt
 
 **cues (큐)**
@@ -118,7 +119,9 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 **memos (메모)**: 메모 한 줄 = 한 행. **조회·집계의 기본 단위.**
 
 - id, sessionId (세션 삭제 시 함께 삭제), content, orderIndex, createdAt, updatedAt
-- evaluation: good / bad / question (nullable)
+- evaluation: good / bad / question / none (nullable)
+  - **none = 평가 없음**("평가할 게 없다"고 정한 것), **null = 고르지 않음**(추천도 확정도 없음). 둘은 다르다. (02에서 변경)
+  - 자동 추천은 키워드가 없으면 none, 잘함·못함 키워드가 함께 있으면 null(판단 보류)이다. 저장 시 confirmed 평가는 덮어쓰지 않지만, confirmed none만은 새 결과가 good/bad/question이면 suggested로 다시 추천한다.
 - evaluationStatus: suggested / confirmed (nullable. evaluation이 null이면 null)
 - lastTaggedContent: 자동 태그·평가 추천을 마지막으로 돌린 시점의 내용
 
@@ -189,9 +192,10 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 
 ## 구현 현황
 
-| 명세                                           | 상태                              |
-| ---------------------------------------------- | --------------------------------- |
-| `docs/specs/01_journal_entry.md` 일지 작성 MVP | 완료 (1~7단계, 웹 전체 흐름 점검) |
+| 명세                                                                     | 상태                                                |
+| ------------------------------------------------------------------------ | --------------------------------------------------- |
+| `docs/specs/01_journal_entry.md` 일지 작성 MVP                           | 완료 (1~7단계, 웹 전체 흐름 점검)                   |
+| `docs/specs/02_tag_review_completion.md` 태그 확인 완료 개선 (평가 없음) | 완료 (1~5단계, 웹 점검·v1 데이터 마이그레이션 확인) |
 
 ## 향후 계획 (지금 구현하지 않음, 구조는 확장 가능하게)
 
