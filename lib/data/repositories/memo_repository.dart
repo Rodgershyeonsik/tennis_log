@@ -253,6 +253,28 @@ class MemoRepository {
     });
   }
 
+  /// 하단 "완료"의 확인 시트에서 "확정하고 완료"(02 명세 5번).
+  ///
+  /// [confirmAllSuggestions]에 더해 **평가를 고르지 않은(null) 메모를 none으로
+  /// 확정**한다. 이걸 거친 세션에는 점선도 빈 평가도 남지 않는다 — 확인 완료
+  /// 일지의 불변식(02 명세 3번)이다.
+  Future<void> confirmAllForCompletion(int sessionId) async {
+    await _db.transaction(() async {
+      await confirmAllSuggestions(sessionId);
+
+      await (_db.update(_db.memos)..where(
+            (t) => t.sessionId.equals(sessionId) & t.evaluation.isNull(),
+          ))
+          .write(
+            MemosCompanion(
+              evaluation: const Value(MemoEvaluation.none),
+              evaluationStatus: const Value(EvaluationStatus.confirmed),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+    });
+  }
+
   Future<int> _nextOrderIndex(int sessionId) async {
     final maxIndex = _db.memos.orderIndex.max();
     final current =

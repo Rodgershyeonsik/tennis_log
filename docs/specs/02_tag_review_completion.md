@@ -130,7 +130,7 @@
   - suggested 평가
   - 평가를 고르지 않은(null) 메모
 - 시트 문구(해당하는 줄만 보여준다):
-  - "추천 태그 N개, 추천 평가 M개가 아직 확정되지 않았어요." (N 또는 M이 0이면 그 부분 생략)
+  - "추천 태그 N개, 추천 평가 M개는 추천된 그대로 확정돼요." (N 또는 M이 0이면 그 부분 생략)
   - "평가를 고르지 않은 메모 K개는 '없음'으로 확정돼요."
 - 버튼: **확정하고 완료** / **돌아가기**.
   - 확정하고 완료: suggested 태그 → confirmed, suggested 평가 → confirmed, null 평가 → none/confirmed, tagReviewed = true, 메인으로.

@@ -6,7 +6,9 @@ import '../../../app/router.dart';
 import '../../../data/repositories/memo_repository.dart';
 import '../../../data/repositories/session_repository.dart';
 import '../../../domain/models/memo_with_tags.dart';
+import '../../../domain/models/review_pending.dart';
 import 'review_providers.dart';
+import 'sheets/complete_confirm_sheet.dart';
 import 'widgets/memo_review_card.dart';
 
 /// 일지 작성 2단계: 태그·평가 확인(명세 5번).
@@ -31,7 +33,25 @@ class TagReviewPage extends ConsumerWidget {
   }
 
   /// 하단 "완료". 2단계를 지났다고 기록하고 메인으로.
-  Future<void> _complete(BuildContext context, WidgetRef ref) async {
+  ///
+  /// 점선이나 고르지 않은 평가가 남아 있으면 먼저 확인 시트로 묻는다(02 명세
+  /// 5번). 남은 게 없어도 [MemoRepository.confirmAllForCompletion]은 거친다 —
+  /// 화면이 그린 목록이 아니라 DB 기준으로 불변식을 지키려는 것이다.
+  Future<void> _complete(
+    BuildContext context,
+    WidgetRef ref,
+    List<MemoWithTags> entries,
+  ) async {
+    final pending = ReviewPending.of(entries);
+    if (!pending.isEmpty) {
+      final confirmed = await showCompleteConfirmSheet(
+        context,
+        pending: pending,
+      );
+      if (confirmed != true) return;
+    }
+
+    await ref.read(memoRepositoryProvider).confirmAllForCompletion(sessionId);
     await ref.read(sessionRepositoryProvider).markTagReviewed(sessionId);
     if (context.mounted) context.go(JournalRoutes.home);
   }
@@ -68,7 +88,7 @@ class TagReviewPage extends ConsumerWidget {
       body: entries != null
           ? _ReviewList(
               entries: entries,
-              onComplete: () => _complete(context, ref),
+              onComplete: () => _complete(context, ref, entries),
             )
           : asyncEntries.hasError
           ? Center(

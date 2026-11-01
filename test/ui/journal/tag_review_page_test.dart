@@ -216,6 +216,7 @@ void main() {
       Icons.thumb_up_outlined,
       Icons.thumb_down_outlined,
       Icons.help_outline,
+      Icons.remove_circle_outline,
     ]) {
       final material = materialOf(tester, icon);
       expect(material.color, scheme.surface);
@@ -375,6 +376,63 @@ void main() {
     await closePage(tester);
   });
 
+  testWidgets('평가 버튼은 잘함·못함·물음표·없음 4개가 400px 폭 한 줄에 놓인다', (tester) async {
+    await addMemo('포칭으로 두 번 먹힘');
+    await pumpPage(tester);
+
+    final icons = [
+      Icons.thumb_up_outlined,
+      Icons.thumb_down_outlined,
+      Icons.help_outline,
+      Icons.remove_circle_outline,
+    ];
+    final centers = [
+      for (final icon in icons) tester.getCenter(find.byIcon(icon)),
+    ];
+    expect(centers.map((c) => c.dy).toSet(), hasLength(1), reason: '한 줄이어야 한다');
+    final xs = centers.map((c) => c.dx).toList();
+    expect(xs, [...xs]..sort(), reason: '잘함 / 못함 / 물음표 / 없음 순서');
+
+    await closePage(tester);
+  });
+
+  testWidgets('추천된 없음을 누르면 확정되고, 다시 누르면 고르지 않음이 된다', (tester) async {
+    final memoId = await addMemo(
+      '토스 높게',
+      evaluation: MemoEvaluation.none,
+      evaluationStatus: EvaluationStatus.suggested,
+    );
+    await pumpPage(tester);
+
+    expect(
+      find.ancestor(
+        of: find.byIcon(Icons.remove_circle),
+        matching: find.byType(DashedBorder),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byIcon(Icons.remove_circle));
+    await tester.pumpAndSettle();
+    var memo = await readMemo(memoId);
+    expect(memo.evaluation, MemoEvaluation.none);
+    expect(memo.evaluationStatus, EvaluationStatus.confirmed);
+
+    // 확정: 테두리 없이 회색 면. 고르지 않음의 흰 면과 달라야 한다.
+    final material = materialOf(tester, Icons.remove_circle);
+    expect(material.color, isNot(ThemeData().colorScheme.surface));
+    expectChipShape(material, hasBorder: false);
+
+    await tester.tap(find.byIcon(Icons.remove_circle));
+    await tester.pumpAndSettle();
+    memo = await readMemo(memoId);
+    expect(memo.evaluation, isNull);
+    expect(memo.evaluationStatus, isNull);
+    expect(find.byIcon(Icons.remove_circle_outline), findsOneWidget);
+
+    await closePage(tester);
+  });
+
   testWidgets('모두 확인은 suggested 태그와 평가를 전부 confirmed로 바꾼다', (tester) async {
     final first = await addMemo(
       '서브 리시브 때 몸이 열림',
@@ -405,18 +463,111 @@ void main() {
     await closePage(tester);
   });
 
-  testWidgets('완료를 누르면 tagReviewed를 켜고 메인으로 간다', (tester) async {
-    final memoId = await addMemo('백발리 여전히 안 됨');
-    await link(memoId, '백발리');
+  Future<bool> tagReviewed() async {
+    final session = await (db.select(
+      db.sessions,
+    )..where((t) => t.id.equals(sessionId))).getSingle();
+    return session.tagReviewed;
+  }
+
+  testWidgets('모두 확정돼 있으면 완료는 시트 없이 tagReviewed를 켜고 메인으로 간다', (tester) async {
+    final memoId = await addMemo(
+      '백발리 여전히 안 됨',
+      evaluation: MemoEvaluation.bad,
+      evaluationStatus: EvaluationStatus.confirmed,
+    );
+    await link(memoId, '백발리', status: MemoTagStatus.confirmed);
     await pumpPage(tester);
 
     await tester.tap(find.widgetWithText(FilledButton, '완료'));
     await tester.pumpAndSettle();
 
-    final session = await (db.select(
-      db.sessions,
-    )..where((t) => t.id.equals(sessionId))).getSingle();
-    expect(session.tagReviewed, isTrue);
+    expect(find.text('확정하고 완료'), findsNothing);
+    expect(await tagReviewed(), isTrue);
+    expect(find.text('메인 화면'), findsOneWidget);
+
+    await closePage(tester);
+  });
+
+  testWidgets('점선과 빈 평가가 남아 있으면 완료 전에 해당하는 줄만 시트로 알린다', (tester) async {
+    final first = await addMemo(
+      '백발리 여전히 안 됨',
+      evaluation: MemoEvaluation.bad,
+      evaluationStatus: EvaluationStatus.suggested,
+    );
+    await link(first, '백발리');
+    await link(first, '발리');
+    await addMemo('포칭으로 두 번 먹힘');
+    await pumpPage(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, '완료'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('추천 태그 2개, 추천 평가 1개는 추천된 그대로 확정돼요.'), findsOneWidget);
+    expect(find.text("평가를 고르지 않은 메모 1개는 '없음'으로 확정돼요."), findsOneWidget);
+
+    await closePage(tester);
+  });
+
+  testWidgets('개수가 0인 부분은 문구에서 빠진다', (tester) async {
+    await addMemo(
+      '토스 높게',
+      evaluation: MemoEvaluation.none,
+      evaluationStatus: EvaluationStatus.suggested,
+    );
+    await pumpPage(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, '완료'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('추천 평가 1개는 추천된 그대로 확정돼요.'), findsOneWidget);
+    expect(find.textContaining('고르지 않은'), findsNothing);
+
+    await closePage(tester);
+  });
+
+  testWidgets('돌아가기는 시트만 닫고 아무것도 바꾸지 않는다', (tester) async {
+    final memoId = await addMemo('포칭으로 두 번 먹힘');
+    await link(memoId, '포칭');
+    await pumpPage(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, '완료'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('돌아가기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('확정하고 완료'), findsNothing);
+    expect(find.text('태그 확인'), findsOneWidget);
+    expect(await tagReviewed(), isFalse);
+    expect((await readLink(memoId, '포칭')).status, MemoTagStatus.suggested);
+    expect((await readMemo(memoId)).evaluation, isNull);
+
+    await closePage(tester);
+  });
+
+  testWidgets('확정하고 완료는 점선을 확정하고 빈 평가를 없음으로 채운 뒤 메인으로 간다', (tester) async {
+    final first = await addMemo(
+      '백발리 여전히 안 됨',
+      evaluation: MemoEvaluation.bad,
+      evaluationStatus: EvaluationStatus.suggested,
+    );
+    await link(first, '백발리');
+    final second = await addMemo('포칭으로 두 번 먹힘');
+    await pumpPage(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, '완료'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('확정하고 완료'));
+    await tester.pumpAndSettle();
+
+    expect((await readLink(first, '백발리')).status, MemoTagStatus.confirmed);
+    var memo = await readMemo(first);
+    expect(memo.evaluation, MemoEvaluation.bad);
+    expect(memo.evaluationStatus, EvaluationStatus.confirmed);
+    memo = await readMemo(second);
+    expect(memo.evaluation, MemoEvaluation.none);
+    expect(memo.evaluationStatus, EvaluationStatus.confirmed);
+    expect(await tagReviewed(), isTrue);
     expect(find.text('메인 화면'), findsOneWidget);
 
     await closePage(tester);

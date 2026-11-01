@@ -354,4 +354,71 @@ void main() {
       expect(row.status, MemoTagStatus.suggested);
     });
   });
+
+  group('confirmAllForCompletion (확정하고 완료)', () {
+    Future<void> setEvaluation(
+      int memoId,
+      MemoEvaluation evaluation,
+      EvaluationStatus status,
+    ) async {
+      await (db.update(db.memos)..where((t) => t.id.equals(memoId))).write(
+        MemosCompanion(
+          evaluation: Value(evaluation),
+          evaluationStatus: Value(status),
+        ),
+      );
+    }
+
+    test('점선 태그·평가를 확정하고 빈 평가는 none으로 확정한다', () async {
+      final added = await repo.addLines(sessionId, '첫째\n둘째\n셋째');
+      await link(added[0].id, await tagId('서브'));
+      await setEvaluation(
+        added[0].id,
+        MemoEvaluation.none,
+        EvaluationStatus.suggested,
+      );
+      await setEvaluation(
+        added[1].id,
+        MemoEvaluation.good,
+        EvaluationStatus.confirmed,
+      );
+      // added[2]는 평가를 고르지 않은 상태.
+
+      await repo.confirmAllForCompletion(sessionId);
+
+      expect(
+        (await db.select(db.memoTags).getSingle()).status,
+        MemoTagStatus.confirmed,
+      );
+      final memos = await repo.watchBySession(sessionId).first;
+      expect(memos.map((m) => m.evaluation), [
+        MemoEvaluation.none,
+        MemoEvaluation.good,
+        MemoEvaluation.none,
+      ]);
+      expect(
+        memos.map((m) => m.evaluationStatus),
+        everyElement(EvaluationStatus.confirmed),
+      );
+    });
+
+    test('rejected 태그와 다른 세션은 건드리지 않는다', () async {
+      final memo = (await repo.addLines(sessionId, '백발리 안 됨')).single;
+      await link(memo.id, await tagId('백발리'), status: MemoTagStatus.rejected);
+      final other = await db
+          .into(db.sessions)
+          .insert(SessionsCompanion.insert(date: DateTime(2026, 9, 28)));
+      await repo.addLines(other, '다른 세션');
+
+      await repo.confirmAllForCompletion(sessionId);
+
+      expect(
+        (await db.select(db.memoTags).getSingle()).status,
+        MemoTagStatus.rejected,
+      );
+      final otherMemo = (await repo.watchBySession(other).first).single;
+      expect(otherMemo.evaluation, isNull);
+      expect(otherMemo.evaluationStatus, isNull);
+    });
+  });
 }

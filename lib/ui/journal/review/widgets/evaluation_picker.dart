@@ -5,7 +5,7 @@ import '../../../core/labels.dart';
 import '../../../core/widgets/dashed_border.dart';
 import 'chip_metrics.dart';
 
-/// 메모 평가 아이콘 3개(명세 5번).
+/// 메모 평가 아이콘 4개: 잘함 / 못함 / 물음표 / 없음(명세 5번, 02에서 없음 추가).
 ///
 /// 하나만 선택되고, **선택된 것을 다시 누르면 해제**된다. 자동 추천된 평가
 /// (suggested)는 점선 테두리로 표시하고, 그 아이콘을 누르면 confirmed가 된다 —
@@ -19,8 +19,9 @@ class EvaluationPicker extends StatelessWidget {
   });
 
   /// 자동 추천이 든 쪽은 초록 계열이 colorScheme에 없어서 직접 정한다.
-  /// bad는 `error`, question은 `primary`를 그대로 쓰므로 어두운 테마에서도
-  /// 테마가 알아서 맞춰 준다. 초록만 두 가지를 들고 있는다.
+  /// bad는 `error`, question은 `primary`, none은 중립 회색인
+  /// `onSurfaceVariant`를 그대로 쓰므로 어두운 테마에서도 테마가 알아서 맞춰
+  /// 준다. 초록만 두 가지를 들고 있는다.
   static const _goodLight = Color(0xFF1B8A4B);
   static const _goodDark = Color(0xFF6BD69B);
 
