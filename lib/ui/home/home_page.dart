@@ -52,75 +52,76 @@ class HomePage extends ConsumerWidget {
     final repository = ref.watch(sessionRepositoryProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('테니스 일지')),
+      appBar: AppBar(
+        title: const Text('테니스 일지'),
+        actions: [
+          FilledButton.tonalIcon(
+            onPressed: () => context.push(JournalRoutes.newJournal),
+            // 테마의 FilledButton은 폭을 꽉 채우고 높이가 52라서 앱바용으로
+            // 크기와 글자를 줄인다. 눌리는 영역은 tapTargetSize로 48을 지킨다.
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            icon: const Icon(Icons.edit_note),
+            label: const Text('새 일지'),
+          ),
+          // 제목 왼쪽 여백(16)과 맞춘다.
+          const SizedBox(width: 16),
+        ],
+      ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: sessions == null
-                  ? const Center(child: CircularProgressIndicator())
-                  : sessions.isEmpty
-                  ? Center(
+        child: sessions == null
+            ? const Center(child: CircularProgressIndicator())
+            : sessions.isEmpty
+            ? Center(
+                child: Text(
+                  '아직 쓴 일지가 없어요.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            : ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                // 마지막 칸은 "밀어서 삭제" 안내다.
+                itemCount: sessions.length + 1,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  if (index == sessions.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 2, left: 4),
                       child: Text(
-                        '아직 쓴 일지가 없어요.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                        '밀어서 삭제',
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                      // 마지막 칸은 "밀어서 삭제" 안내다.
-                      itemCount: sessions.length + 1,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        if (index == sessions.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 2, left: 4),
-                            child: Text(
-                              '밀어서 삭제',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          );
-                        }
+                    );
+                  }
 
-                        final item = sessions[index];
-                        return Dismissible(
-                          key: ValueKey('session-${item.id}'),
-                          // 안내 문구대로 어느 쪽으로 밀어도 지워진다.
-                          direction: DismissDirection.horizontal,
-                          background: const SwipeDeleteBackground(
-                            alignment: Alignment.centerLeft,
-                          ),
-                          secondaryBackground: const SwipeDeleteBackground(),
-                          onDismissed: (_) => _delete(
-                            ScaffoldMessenger.of(context),
-                            repository,
-                            item.id,
-                          ),
-                          child: _SessionRow(item: item),
-                        );
-                      },
+                  final item = sessions[index];
+                  return Dismissible(
+                    key: ValueKey('session-${item.id}'),
+                    // 안내 문구대로 어느 쪽으로 밀어도 지워진다.
+                    direction: DismissDirection.horizontal,
+                    background: const SwipeDeleteBackground(
+                      alignment: Alignment.centerLeft,
                     ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                border: Border(
-                  top: BorderSide(color: theme.colorScheme.outlineVariant),
-                ),
+                    secondaryBackground: const SwipeDeleteBackground(),
+                    onDismissed: (_) => _delete(
+                      ScaffoldMessenger.of(context),
+                      repository,
+                      item.id,
+                    ),
+                    child: _SessionRow(item: item),
+                  );
+                },
               ),
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: FilledButton.icon(
-                onPressed: () => context.push(JournalRoutes.newJournal),
-                icon: const Icon(Icons.edit_note),
-                label: const Text('새 일지 쓰기'),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -97,6 +97,27 @@ abstract final class AppTheme {
       switchTheme: const SwitchThemeData(
         overlayColor: WidgetStatePropertyAll(Colors.transparent),
       ),
+      // 선택된 탭은 아이콘 뒤 알약 모양 배경 없이 아이콘·라벨 색으로만 표시한다.
+      navigationBarTheme: NavigationBarThemeData(
+        overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+        indicatorColor: Colors.transparent,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? scheme.primary
+                : scheme.onSurfaceVariant,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? scheme.primary
+                : scheme.onSurfaceVariant,
+          ),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         // 카드(surfaceContainerLow) 위에 올라가므로 한 단계 밝은 면으로 띄운다.
         filled: true,

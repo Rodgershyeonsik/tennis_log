@@ -4,6 +4,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../ui/home/home_page.dart';
 import '../ui/journal/entry/journal_entry_page.dart';
 import '../ui/journal/review/tag_review_page.dart';
+import '../ui/search/search_page.dart';
+import 'app_shell.dart';
+import 'app_tabs.dart';
 
 // 이 파일과 짝이 되는 생성 코드. `dart run build_runner build`로 만들어진다.
 part 'router.g.dart';
@@ -18,10 +21,31 @@ GoRouter router(Ref ref) {
   return GoRouter(
     initialLocation: JournalRoutes.home,
     routes: [
-      GoRoute(
-        path: JournalRoutes.home,
-        builder: (context, state) => const HomePage(),
+      // 하단 내비게이션 탭. 브랜치 순서는 `AppTab` 순서와 같아야 한다.
+      // indexedStack이라 탭을 바꿔도 각 탭 화면이 그대로 남는다.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppTab.journal.path,
+                builder: (context, state) => const HomePage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppTab.search.path,
+                builder: (context, state) => const SearchPage(),
+              ),
+            ],
+          ),
+        ],
       ),
+      // 아래는 셸 밖의 전체 화면 라우트다. 내비게이션 바가 보이지 않는다.
       // `/journal/new`가 `/journal/:id`보다 먼저 와야 'new'가 id로 잡히지 않는다.
       GoRoute(
         path: JournalRoutes.newJournal,
@@ -46,7 +70,7 @@ GoRouter router(Ref ref) {
 
 /// 경로 문자열 오타 방지용 상수 클래스
 abstract final class JournalRoutes {
-  static const home = '/';
+  static final home = AppTab.journal.path;
   static const newJournal = '/journal/new';
 
   static String entry(int sessionId) => '/journal/$sessionId';

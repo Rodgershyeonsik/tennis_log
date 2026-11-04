@@ -71,7 +71,7 @@ void main() {
     await pumpPage(tester);
 
     expect(find.text('아직 쓴 일지가 없어요.'), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, '새 일지 쓰기'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, '새 일지'), findsOneWidget);
 
     await closePage(tester);
   });

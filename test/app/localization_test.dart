@@ -25,7 +25,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('새 일지 쓰기'));
+    await tester.tap(find.text('새 일지'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('날짜 선택'));
