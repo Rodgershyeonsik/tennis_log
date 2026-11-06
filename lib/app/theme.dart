@@ -97,6 +97,9 @@ abstract final class AppTheme {
       switchTheme: const SwitchThemeData(
         overlayColor: WidgetStatePropertyAll(Colors.transparent),
       ),
+      tabBarTheme: const TabBarThemeData(
+        overlayColor: WidgetStatePropertyAll(Colors.transparent),
+      ),
       // 선택된 탭은 아이콘 뒤 알약 모양 배경 없이 아이콘·라벨 색으로만 표시한다.
       navigationBarTheme: NavigationBarThemeData(
         overlayColor: const WidgetStatePropertyAll(Colors.transparent),

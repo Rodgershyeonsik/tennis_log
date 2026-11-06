@@ -14,8 +14,13 @@ abstract final class Formatters {
 
   /// `26/9/22 금` — 목록처럼 좁은 자리에 쓰는 짧은 형식.
   static String dateWithWeekday(DateTime date) {
+    return '${shortDate(date)} ${weekday(date)}';
+  }
+
+  /// `26/9/22` — 기간처럼 날짜 두 개를 나란히 쓰는 자리의 형식.
+  static String shortDate(DateTime date) {
     final year = (date.year % 100).toString().padLeft(2, '0');
-    return '$year/${date.month}/${date.day} ${weekday(date)}';
+    return '$year/${date.month}/${date.day}';
   }
 
   /// 자정 기준 분을 `18:00`으로. 1440은 `24:00`이다(종료 시간의 상한).

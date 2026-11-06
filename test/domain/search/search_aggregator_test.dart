@@ -107,6 +107,34 @@ void main() {
         items.single.count,
       );
     });
+
+    test('좁혀 보기는 고른 태그 중 하나라도 직접 붙은 메모만 남긴다', () {
+      final serveMemo = memo([serve]);
+      final faultMemo = memo([doubleFault]);
+      final volleyMemo = memo([backVolley]);
+      final memos = [serveMemo, faultMemo, volleyMemo];
+
+      expect(SearchAggregator.narrowByTags(memos, {serve, doubleFault}), [
+        serveMemo,
+        faultMemo,
+      ]);
+    });
+
+    test('좁혀 보기가 비어 있으면 그대로다', () {
+      final memos = [
+        memo([serve]),
+      ];
+
+      expect(SearchAggregator.narrowByTags(memos, const {}), memos);
+    });
+
+    test('어떤 메모에도 없는 태그로는 목록을 비우지 않는다', () {
+      final memos = [
+        memo([serve]),
+      ];
+
+      expect(SearchAggregator.narrowByTags(memos, {doubleFault}), memos);
+    });
   });
 
   group('태그 통계', () {

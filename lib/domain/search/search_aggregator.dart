@@ -111,6 +111,18 @@ abstract final class SearchAggregator {
     });
   }
 
+  /// 요약 칩으로 좁혀 본 메모. [tagIds] 중 하나라도 직접 붙은 메모만 남긴다.
+  ///
+  /// 어떤 메모에도 없는 태그는 무시한다. 일지를 고쳐서 태그가 사라지면 끌 칩이
+  /// 없어지므로, 그 태그 때문에 목록이 비면 안 된다.
+  static List<SearchMemo> narrowByTags(
+    List<SearchMemo> memos,
+    Set<int> tagIds,
+  ) {
+    final narrowed = memos.where((memo) => memo.tagIds.any(tagIds.contains));
+    return narrowed.isEmpty ? memos : narrowed.toList();
+  }
+
   /// 최상위 태그의 통계 행. 자식은 부모 행의 [TagStatRow.children]에만 나온다.
   ///
   /// [category]는 최상위 태그의 카테고리로 거르고, null이면 전체다.
