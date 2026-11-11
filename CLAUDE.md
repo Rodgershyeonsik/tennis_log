@@ -179,6 +179,7 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 - drift는 브라우저 기능에 따라 OPFS → IndexedDB 순으로 저장 방식을 고르고, 아무것도 못 쓰면 **에러 없이 `inMemory`로 떨어져 새로고침 시 데이터가 사라진다.** 어떤 방식이 선택됐는지 디버그 빌드에서 콘솔에 `[drift] 웹 저장 방식: ...`으로 남긴다.
 - **`flutter run -d chrome`은 매번 임시 Chrome 프로필로 띄우고, 정상 종료될 때만 `.dart_tool/chrome-device/`로 복사한다.** 그래서 터미널에서 `q`로 끄거나 창을 닫으면 DB가 유지되지만, 프로세스를 강제 종료하면 그 실행 동안의 데이터가 유실된다.
 - **개발용 웹 DB를 비우려면 `.dart_tool/chrome-device/`를 삭제한다.** 시드를 고친 뒤 새 태그 사전을 넣어보려면 이 방법을 쓴다(시드는 `tags`가 빈 DB에서만 돌기 때문).
+- **Android DB를 웹에서 보기**: Android에서 뽑은 DB 파일을 `web/dev_seed.sqlite`로 두고 `.dart_tool/chrome-device/`를 지운 뒤 실행한다. 디버그 빌드는 웹 DB가 없을 때만 이 파일로 시작한다(`lib/data/db/dev_seed/`). 예전 스키마여도 마이그레이션이 올려 준다. 개인 데이터라 `.gitignore`에 넣어 두었다.
 - OPFS를 쓰려면 `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy` 헤더가 필요한데 `flutter run`에는 헤더 설정 옵션이 없다. 개발 중에는 shared worker + IndexedDB로 동작하며, 이것도 새로고침 후 유지된다.
 
 ## 라우트

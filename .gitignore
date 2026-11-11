@@ -48,3 +48,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# 개발용 웹 DB 시드. Android에서 뽑은 실제 일지 데이터라 커밋하지 않는다.
+/web/dev_seed.sqlite

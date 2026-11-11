@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 
+import 'dev_seed/dev_seed.dart';
 import 'enums.dart';
 import 'migrations/v2_evaluation_none.dart';
 import 'seed/tag_seeder.dart';
@@ -86,8 +87,17 @@ QueryExecutor _openConnection() {
       sqlite3Wasm: Uri.parse('sqlite3.wasm'),
       driftWorker: Uri.parse('drift_worker.js'),
       onResult: _logWebStorage,
+      // 개발 중 웹에서 실제 데이터로 화면을 보려고, 웹 DB가 아직 없을 때만
+      // `web/dev_seed.sqlite`(Android에서 뽑아 둔 DB, 커밋하지 않는다)로 시작한다.
+      initializeDatabase: kDebugMode ? _loadDevSeed : null,
     ),
   );
+}
+
+Future<Uint8List?> _loadDevSeed() async {
+  final bytes = await loadDevSeed();
+  if (bytes != null) debugPrint('[drift] web/dev_seed.sqlite로 웹 DB를 시작한다.');
+  return bytes;
 }
 
 /// 웹에서 drift가 **어떤 저장 방식을 골랐는지** 콘솔에 남긴다.
