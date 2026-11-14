@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$MemoAnalysis {
 
 /// tagId 오름차순. 같은 태그가 두 번 들어오지는 않는다.
- List<SuggestedTag> get tags;/// 추천 평가. 키워드가 없거나 good·bad가 동시에 매칭되면 null이다.
+ List<SuggestedTag> get tags;/// 추천 평가. 키워드가 없으면 none, good·bad가 동시에 매칭되면 null(판단 보류)이다.
+/// 규칙은 `suggestEvaluation`.
  MemoEvaluation? get evaluation;
 /// Create a copy of MemoAnalysis
 /// with the given fields replaced by the non-null parameter values.
@@ -227,7 +228,8 @@ class _MemoAnalysis implements MemoAnalysis {
   return EqualUnmodifiableListView(_tags);
 }
 
-/// 추천 평가. 키워드가 없거나 good·bad가 동시에 매칭되면 null이다.
+/// 추천 평가. 키워드가 없으면 none, good·bad가 동시에 매칭되면 null(판단 보류)이다.
+/// 규칙은 `suggestEvaluation`.
 @override final  MemoEvaluation? evaluation;
 
 /// Create a copy of MemoAnalysis

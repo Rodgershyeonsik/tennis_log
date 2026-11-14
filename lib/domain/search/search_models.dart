@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../data/db/app_database.dart';
 import '../../data/db/enums.dart';
 
 part 'search_models.freezed.dart';
@@ -50,6 +51,38 @@ abstract class SearchTag with _$SearchTag {
     int? parentTagId,
     @Default(false) bool isArchived,
   }) = _SearchTag;
+}
+
+/// 세션 상세 시트(읽기 전용)가 그리는 세션 하나.
+@freezed
+abstract class SessionDetail with _$SessionDetail {
+  const factory SessionDetail({
+    required Session session,
+
+    /// 큐가 없으면 null이다.
+    String? cueText,
+
+    /// 입력 순(orderIndex)이다.
+    required List<Game> games,
+
+    /// 쓴 순서(orderIndex)다.
+    required List<SessionDetailMemo> memos,
+  }) = _SessionDetail;
+}
+
+/// 세션 상세 시트의 메모 한 건.
+@freezed
+abstract class SessionDetailMemo with _$SessionDetailMemo {
+  const factory SessionDetailMemo({
+    required int id,
+    required String content,
+
+    /// 확정된 평가만 담는다. 확정이 아니면 null이다.
+    MemoEvaluation? evaluation,
+
+    /// 확정된 태그의 이름, 이름 순.
+    required List<String> tagNames,
+  }) = _SessionDetailMemo;
 }
 
 /// 세션을 최신순으로 비교한다. 날짜, 시작 시각, id가 모두 큰 쪽이 앞이다.

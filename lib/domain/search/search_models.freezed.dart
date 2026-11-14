@@ -887,4 +887,581 @@ as bool,
 
 }
 
+/// @nodoc
+mixin _$SessionDetail {
+
+ Session get session;/// 큐가 없으면 null이다.
+ String? get cueText;/// 입력 순(orderIndex)이다.
+ List<Game> get games;/// 쓴 순서(orderIndex)다.
+ List<SessionDetailMemo> get memos;
+/// Create a copy of SessionDetail
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SessionDetailCopyWith<SessionDetail> get copyWith => _$SessionDetailCopyWithImpl<SessionDetail>(this as SessionDetail, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as SessionDetail;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionDetail&&const DeepCollectionEquality().equals(other.session, _this.session)&&(identical(other.cueText, _this.cueText) || other.cueText == _this.cueText)&&const DeepCollectionEquality().equals(other.games, _this.games)&&const DeepCollectionEquality().equals(other.memos, _this.memos));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as SessionDetail;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.session),_this.cueText,const DeepCollectionEquality().hash(_this.games),const DeepCollectionEquality().hash(_this.memos));
+}
+
+@override
+String toString() {
+  final _this = this as SessionDetail;
+  return 'SessionDetail(session: ${_this.session}, cueText: ${_this.cueText}, games: ${_this.games}, memos: ${_this.memos})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SessionDetailCopyWith<$Res>  {
+  factory $SessionDetailCopyWith(SessionDetail value, $Res Function(SessionDetail) _then) = _$SessionDetailCopyWithImpl;
+@useResult
+$Res call({
+ Session session, String? cueText, List<Game> games, List<SessionDetailMemo> memos
+});
+
+
+
+
+}
+/// @nodoc
+class _$SessionDetailCopyWithImpl<$Res>
+    implements $SessionDetailCopyWith<$Res> {
+  _$SessionDetailCopyWithImpl(this._self, this._then);
+
+  final SessionDetail _self;
+  final $Res Function(SessionDetail) _then;
+
+/// Create a copy of SessionDetail
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? session = freezed,Object? cueText = freezed,Object? games = null,Object? memos = null,}) {
+  return _then(SessionDetail(
+session: freezed == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
+as Session,cueText: freezed == cueText ? _self.cueText : cueText // ignore: cast_nullable_to_non_nullable
+as String?,games: null == games ? _self.games : games // ignore: cast_nullable_to_non_nullable
+as List<Game>,memos: null == memos ? _self.memos : memos // ignore: cast_nullable_to_non_nullable
+as List<SessionDetailMemo>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SessionDetail].
+extension SessionDetailPatterns on SessionDetail {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SessionDetail value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SessionDetail() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SessionDetail value)  $default,){
+final _that = this;
+switch (_that) {
+case _SessionDetail():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SessionDetail value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SessionDetail() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Session session,  String? cueText,  List<Game> games,  List<SessionDetailMemo> memos)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SessionDetail() when $default != null:
+return $default(_that.session,_that.cueText,_that.games,_that.memos);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Session session,  String? cueText,  List<Game> games,  List<SessionDetailMemo> memos)  $default,) {final _that = this;
+switch (_that) {
+case _SessionDetail():
+return $default(_that.session,_that.cueText,_that.games,_that.memos);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Session session,  String? cueText,  List<Game> games,  List<SessionDetailMemo> memos)?  $default,) {final _that = this;
+switch (_that) {
+case _SessionDetail() when $default != null:
+return $default(_that.session,_that.cueText,_that.games,_that.memos);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _SessionDetail implements SessionDetail {
+  const _SessionDetail({required this.session, this.cueText, required  List<Game> games, required  List<SessionDetailMemo> memos}): _games = games,_memos = memos;
+  
+
+@override final  Session session;
+/// 큐가 없으면 null이다.
+@override final  String? cueText;
+/// 입력 순(orderIndex)이다.
+ final  List<Game> _games;
+/// 입력 순(orderIndex)이다.
+@override List<Game> get games {
+  if (_games is EqualUnmodifiableListView) return _games;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_games);
+}
+
+/// 쓴 순서(orderIndex)다.
+ final  List<SessionDetailMemo> _memos;
+/// 쓴 순서(orderIndex)다.
+@override List<SessionDetailMemo> get memos {
+  if (_memos is EqualUnmodifiableListView) return _memos;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_memos);
+}
+
+
+/// Create a copy of SessionDetail
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SessionDetailCopyWith<_SessionDetail> get copyWith => __$SessionDetailCopyWithImpl<_SessionDetail>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionDetail&&const DeepCollectionEquality().equals(other.session, session)&&(identical(other.cueText, cueText) || other.cueText == cueText)&&const DeepCollectionEquality().equals(other.games, _games)&&const DeepCollectionEquality().equals(other.memos, _memos));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(session),cueText,const DeepCollectionEquality().hash(_games),const DeepCollectionEquality().hash(_memos));
+}
+
+@override
+String toString() {
+    return 'SessionDetail(session: $session, cueText: $cueText, games: $games, memos: $memos)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SessionDetailCopyWith<$Res> implements $SessionDetailCopyWith<$Res> {
+  factory _$SessionDetailCopyWith(_SessionDetail value, $Res Function(_SessionDetail) _then) = __$SessionDetailCopyWithImpl;
+@override @useResult
+$Res call({
+ Session session, String? cueText, List<Game> games, List<SessionDetailMemo> memos
+});
+
+
+
+
+}
+/// @nodoc
+class __$SessionDetailCopyWithImpl<$Res>
+    implements _$SessionDetailCopyWith<$Res> {
+  __$SessionDetailCopyWithImpl(this._self, this._then);
+
+  final _SessionDetail _self;
+  final $Res Function(_SessionDetail) _then;
+
+/// Create a copy of SessionDetail
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? session = freezed,Object? cueText = freezed,Object? games = null,Object? memos = null,}) {
+  return _then(_SessionDetail(
+session: freezed == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
+as Session,cueText: freezed == cueText ? _self.cueText : cueText // ignore: cast_nullable_to_non_nullable
+as String?,games: null == games ? _self._games : games // ignore: cast_nullable_to_non_nullable
+as List<Game>,memos: null == memos ? _self._memos : memos // ignore: cast_nullable_to_non_nullable
+as List<SessionDetailMemo>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$SessionDetailMemo {
+
+ int get id; String get content;/// 확정된 평가만 담는다. 확정이 아니면 null이다.
+ MemoEvaluation? get evaluation;/// 확정된 태그의 이름, 이름 순.
+ List<String> get tagNames;
+/// Create a copy of SessionDetailMemo
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SessionDetailMemoCopyWith<SessionDetailMemo> get copyWith => _$SessionDetailMemoCopyWithImpl<SessionDetailMemo>(this as SessionDetailMemo, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as SessionDetailMemo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionDetailMemo&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.content, _this.content) || other.content == _this.content)&&(identical(other.evaluation, _this.evaluation) || other.evaluation == _this.evaluation)&&const DeepCollectionEquality().equals(other.tagNames, _this.tagNames));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as SessionDetailMemo;
+  return Object.hash(runtimeType,_this.id,_this.content,_this.evaluation,const DeepCollectionEquality().hash(_this.tagNames));
+}
+
+@override
+String toString() {
+  final _this = this as SessionDetailMemo;
+  return 'SessionDetailMemo(id: ${_this.id}, content: ${_this.content}, evaluation: ${_this.evaluation}, tagNames: ${_this.tagNames})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SessionDetailMemoCopyWith<$Res>  {
+  factory $SessionDetailMemoCopyWith(SessionDetailMemo value, $Res Function(SessionDetailMemo) _then) = _$SessionDetailMemoCopyWithImpl;
+@useResult
+$Res call({
+ int id, String content, MemoEvaluation? evaluation, List<String> tagNames
+});
+
+
+
+
+}
+/// @nodoc
+class _$SessionDetailMemoCopyWithImpl<$Res>
+    implements $SessionDetailMemoCopyWith<$Res> {
+  _$SessionDetailMemoCopyWithImpl(this._self, this._then);
+
+  final SessionDetailMemo _self;
+  final $Res Function(SessionDetailMemo) _then;
+
+/// Create a copy of SessionDetailMemo
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? content = null,Object? evaluation = freezed,Object? tagNames = null,}) {
+  return _then(SessionDetailMemo(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
+as String,evaluation: freezed == evaluation ? _self.evaluation : evaluation // ignore: cast_nullable_to_non_nullable
+as MemoEvaluation?,tagNames: null == tagNames ? _self.tagNames : tagNames // ignore: cast_nullable_to_non_nullable
+as List<String>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SessionDetailMemo].
+extension SessionDetailMemoPatterns on SessionDetailMemo {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SessionDetailMemo value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SessionDetailMemo() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SessionDetailMemo value)  $default,){
+final _that = this;
+switch (_that) {
+case _SessionDetailMemo():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SessionDetailMemo value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SessionDetailMemo() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String content,  MemoEvaluation? evaluation,  List<String> tagNames)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SessionDetailMemo() when $default != null:
+return $default(_that.id,_that.content,_that.evaluation,_that.tagNames);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String content,  MemoEvaluation? evaluation,  List<String> tagNames)  $default,) {final _that = this;
+switch (_that) {
+case _SessionDetailMemo():
+return $default(_that.id,_that.content,_that.evaluation,_that.tagNames);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String content,  MemoEvaluation? evaluation,  List<String> tagNames)?  $default,) {final _that = this;
+switch (_that) {
+case _SessionDetailMemo() when $default != null:
+return $default(_that.id,_that.content,_that.evaluation,_that.tagNames);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _SessionDetailMemo implements SessionDetailMemo {
+  const _SessionDetailMemo({required this.id, required this.content, this.evaluation, required  List<String> tagNames}): _tagNames = tagNames;
+  
+
+@override final  int id;
+@override final  String content;
+/// 확정된 평가만 담는다. 확정이 아니면 null이다.
+@override final  MemoEvaluation? evaluation;
+/// 확정된 태그의 이름, 이름 순.
+ final  List<String> _tagNames;
+/// 확정된 태그의 이름, 이름 순.
+@override List<String> get tagNames {
+  if (_tagNames is EqualUnmodifiableListView) return _tagNames;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_tagNames);
+}
+
+
+/// Create a copy of SessionDetailMemo
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SessionDetailMemoCopyWith<_SessionDetailMemo> get copyWith => __$SessionDetailMemoCopyWithImpl<_SessionDetailMemo>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SessionDetailMemo&&(identical(other.id, id) || other.id == id)&&(identical(other.content, content) || other.content == content)&&(identical(other.evaluation, evaluation) || other.evaluation == evaluation)&&const DeepCollectionEquality().equals(other.tagNames, _tagNames));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,content,evaluation,const DeepCollectionEquality().hash(_tagNames));
+}
+
+@override
+String toString() {
+    return 'SessionDetailMemo(id: $id, content: $content, evaluation: $evaluation, tagNames: $tagNames)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SessionDetailMemoCopyWith<$Res> implements $SessionDetailMemoCopyWith<$Res> {
+  factory _$SessionDetailMemoCopyWith(_SessionDetailMemo value, $Res Function(_SessionDetailMemo) _then) = __$SessionDetailMemoCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, String content, MemoEvaluation? evaluation, List<String> tagNames
+});
+
+
+
+
+}
+/// @nodoc
+class __$SessionDetailMemoCopyWithImpl<$Res>
+    implements _$SessionDetailMemoCopyWith<$Res> {
+  __$SessionDetailMemoCopyWithImpl(this._self, this._then);
+
+  final _SessionDetailMemo _self;
+  final $Res Function(_SessionDetailMemo) _then;
+
+/// Create a copy of SessionDetailMemo
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? content = null,Object? evaluation = freezed,Object? tagNames = null,}) {
+  return _then(_SessionDetailMemo(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
+as String,evaluation: freezed == evaluation ? _self.evaluation : evaluation // ignore: cast_nullable_to_non_nullable
+as MemoEvaluation?,tagNames: null == tagNames ? _self._tagNames : tagNames // ignore: cast_nullable_to_non_nullable
+as List<String>,
+  ));
+}
+
+
+}
+
 // dart format on

@@ -68,6 +68,20 @@ class SearchRepository {
     return _watch({_db.tags}, _loadTags);
   }
 
+  /// 세션 상세 시트의 내용. 세션이 지워졌으면 null이다.
+  ///
+  /// 태그와 평가는 확정된 것만 담는다.
+  Stream<SessionDetail?> watchSessionDetail(int sessionId) {
+    return _watch({
+      _db.sessions,
+      _db.cues,
+      _db.games,
+      _db.memos,
+      _db.memoTags,
+      _db.tags,
+    }, () => _loadSessionDetail(sessionId));
+  }
+
   /// [tables]가 바뀔 때마다 [load]를 다시 돌린다.
   ///
   /// 쿼리 여러 개의 결과를 합쳐야 해서 쿼리 하나의 watch로는 부족하다.
@@ -138,6 +152,77 @@ class SearchRepository {
                 : null,
             session: sessions[memo.sessionId]!,
             tagIds: tagIds[memo.id]!,
+          ),
+      ],
+    );
+  }
+
+  Future<SessionDetail?> _loadSessionDetail(int sessionId) async {
+    final session = await (_db.select(
+      _db.sessions,
+    )..where((t) => t.id.equals(sessionId))).getSingleOrNull();
+    if (session == null) return null;
+
+    final cueId = session.cueId;
+    final cue = cueId == null
+        ? null
+        : await (_db.select(
+            _db.cues,
+          )..where((t) => t.id.equals(cueId))).getSingleOrNull();
+
+    final games =
+        await (_db.select(_db.games)
+              ..where((t) => t.sessionId.equals(sessionId))
+              ..orderBy([
+                (t) => OrderingTerm.asc(t.orderIndex),
+                (t) => OrderingTerm.asc(t.id),
+              ]))
+            .get();
+
+    final rows =
+        await (_db.select(_db.memos).join([
+                leftOuterJoin(
+                  _db.memoTags,
+                  _db.memoTags.memoId.equalsExp(_db.memos.id) &
+                      _db.memoTags.status.equalsValue(MemoTagStatus.confirmed),
+                ),
+                leftOuterJoin(
+                  _db.tags,
+                  _db.tags.id.equalsExp(_db.memoTags.tagId),
+                ),
+              ])
+              ..where(_db.memos.sessionId.equals(sessionId))
+              ..orderBy([
+                OrderingTerm.asc(_db.memos.orderIndex),
+                OrderingTerm.asc(_db.memos.id),
+                OrderingTerm.asc(_db.tags.name),
+              ]))
+            .get();
+
+    // 조인 결과는 메모 하나가 태그 수만큼 여러 줄로 나오므로 다시 묶는다.
+    final memos = <int, Memo>{};
+    final tagNames = <int, List<String>>{};
+    for (final row in rows) {
+      final memo = row.readTable(_db.memos);
+      memos[memo.id] = memo;
+      final names = tagNames.putIfAbsent(memo.id, () => []);
+      final tag = row.readTableOrNull(_db.tags);
+      if (tag != null) names.add(tag.name);
+    }
+
+    return SessionDetail(
+      session: session,
+      cueText: cue?.cueText,
+      games: games,
+      memos: [
+        for (final memo in memos.values)
+          SessionDetailMemo(
+            id: memo.id,
+            content: memo.content,
+            evaluation: memo.evaluationStatus == EvaluationStatus.confirmed
+                ? memo.evaluation
+                : null,
+            tagNames: tagNames[memo.id]!,
           ),
       ],
     );

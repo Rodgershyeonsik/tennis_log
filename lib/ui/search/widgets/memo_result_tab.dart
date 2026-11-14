@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/search/search_aggregator.dart';
 import '../search_notifier.dart';
 import '../search_providers.dart';
+import '../sheets/session_detail_sheet.dart';
 import 'memo_result_card.dart';
 import 'tag_summary_card.dart';
 
@@ -68,7 +69,16 @@ class MemoResultTab extends ConsumerWidget {
             itemCount: sorted.length,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
-              return MemoResultCard(memo: sorted[index], hierarchy: hierarchy);
+              final memo = sorted[index];
+              return MemoResultCard(
+                memo: memo,
+                hierarchy: hierarchy,
+                onTap: () => showSessionDetailSheet(
+                  context,
+                  sessionId: memo.session.id,
+                  memoId: memo.id,
+                ),
+              );
             },
           ),
         ),

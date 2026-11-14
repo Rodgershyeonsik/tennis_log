@@ -583,4 +583,64 @@ void main() {
     final allTags = await repo.watchTags().first;
     expect(allTags.singleWhere((tag) => tag.id == id).isArchived, isTrue);
   });
+  group('세션 상세', () {
+    test('메모는 쓴 순서이고 확정 태그와 확정 평가만 담는다', () async {
+      final id = await addSession();
+      final second = await addMemo(
+        id,
+        content: '둘째',
+        orderIndex: 1,
+        evaluation: MemoEvaluation.bad,
+        evaluationStatus: EvaluationStatus.suggested,
+      );
+      final first = await addMemo(
+        id,
+        content: '첫째',
+        evaluation: MemoEvaluation.good,
+        tagNames: ['서브', '발리'],
+      );
+      await addMemoTag(second, '서브', status: MemoTagStatus.suggested);
+      await addMemoTag(second, '발리', status: MemoTagStatus.rejected);
+
+      final detail = (await repo.watchSessionDetail(id).first)!;
+
+      expect(detail.memos.map((memo) => memo.id), [first, second]);
+      expect(detail.memos[0].tagNames, ['발리', '서브']);
+      expect(detail.memos[0].evaluation, MemoEvaluation.good);
+      expect(detail.memos[1].tagNames, isEmpty);
+      expect(detail.memos[1].evaluation, isNull);
+    });
+
+    test('큐 텍스트와 게임을 입력 순으로 담는다', () async {
+      final cueId = await db
+          .into(db.cues)
+          .insert(CuesCompanion.insert(cueText: '라켓 먼저'));
+      final id = await addSession();
+      await (db.update(db.sessions)..where((t) => t.id.equals(id))).write(
+        SessionsCompanion(cueId: Value(cueId)),
+      );
+      for (final (index, score) in [(1, 2), (0, 6)]) {
+        await db
+            .into(db.games)
+            .insert(
+              GamesCompanion.insert(
+                sessionId: id,
+                format: GameFormat.mixedDoubles,
+                myScore: Value(score),
+                opponentScore: const Value(4),
+                orderIndex: index,
+              ),
+            );
+      }
+
+      final detail = (await repo.watchSessionDetail(id).first)!;
+
+      expect(detail.cueText, '라켓 먼저');
+      expect(detail.games.map((game) => game.myScore), [6, 2]);
+    });
+
+    test('없는 세션은 null이다', () async {
+      expect(await repo.watchSessionDetail(999).first, isNull);
+    });
+  });
 }

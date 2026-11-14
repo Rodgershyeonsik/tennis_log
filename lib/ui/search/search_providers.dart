@@ -46,3 +46,9 @@ Stream<TagHierarchy> searchTagHierarchy(Ref ref) {
 final searchPlacesProvider = StreamProvider<List<Place>>((ref) {
   return ref.watch(placeRepositoryProvider).watchByName();
 });
+
+/// 세션 상세 시트. 일지가 지워졌으면 null이다.
+@riverpod
+Stream<SessionDetail?> sessionDetail(Ref ref, int sessionId) {
+  return ref.watch(searchRepositoryProvider).watchSessionDetail(sessionId);
+}

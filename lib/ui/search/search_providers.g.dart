@@ -217,3 +217,87 @@ final class SearchTagHierarchyProvider
 
 String _$searchTagHierarchyHash() =>
     r'bdea38911ea965f3eb93ec356ea501db652f273b';
+
+/// 세션 상세 시트. 일지가 지워졌으면 null이다.
+
+@ProviderFor(sessionDetail)
+final sessionDetailProvider = SessionDetailFamily._();
+
+/// 세션 상세 시트. 일지가 지워졌으면 null이다.
+
+final class SessionDetailProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SessionDetail?>,
+          SessionDetail?,
+          Stream<SessionDetail?>
+        >
+    with $FutureModifier<SessionDetail?>, $StreamProvider<SessionDetail?> {
+  /// 세션 상세 시트. 일지가 지워졌으면 null이다.
+  SessionDetailProvider._({
+    required SessionDetailFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'sessionDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$sessionDetailHash();
+
+  @override
+  String toString() {
+    return r'sessionDetailProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<SessionDetail?> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<SessionDetail?> create(Ref ref) {
+    final argument = this.argument as int;
+    return sessionDetail(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SessionDetailProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$sessionDetailHash() => r'd3a5cdd57a8ffd0064e4821b4a6c263840616db0';
+
+/// 세션 상세 시트. 일지가 지워졌으면 null이다.
+
+final class SessionDetailFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<SessionDetail?>, int> {
+  SessionDetailFamily._()
+    : super(
+        retry: null,
+        name: r'sessionDetailProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// 세션 상세 시트. 일지가 지워졌으면 null이다.
+
+  SessionDetailProvider call(int sessionId) =>
+      SessionDetailProvider._(argument: sessionId, from: this);
+
+  @override
+  String toString() => r'sessionDetailProvider';
+}
