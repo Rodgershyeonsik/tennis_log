@@ -49,20 +49,23 @@
 ```
 lib/
   main.dart
-  app/              라우터, 테마
+  app/              라우터, 테마, 하단 탭 셸 (탭 목록은 app_tabs.dart 한곳에서 정의)
   data/
     db/             drift DB, 테이블, 시드, 마이그레이션
     repositories/   세션, 메모, 태그, 장소, 큐. 테이블 단위 읽기·쓰기. 모든 기능이 공유
+                    search_repository.dart: 조회 쿼리(여러 테이블을 묶어 읽기 전용으로 조회)
   domain/
     tagging/        자동 태그 엔진 (AutoTagger, TagDictionary, AutoTagResult)
     models/         여러 기능이 같이 쓰는 모델 (freezed), 시간 계산
     use_cases/      여러 리포지토리에 걸친 규칙 하나를 실행하는 작업 (저장 시 자동 태그 적용 AutoTagApplier)
+    search/         SearchFilter, 범위(기간) 계산, 태그 자손 포함, 필터 매칭, 집계. 순수 Dart
   ui/
     core/           날짜 포맷(formatters), enum 한국어 표기(labels)
       widgets/      칩 그룹, 분할 버튼, 스테퍼 등 공용 위젯
     home/
     journal/        화면, 하단 시트, 위젯, notifier만 (entry/ 작성, review/ 태그·평가 확인)
-    (search/, stats/, tags/ ...)
+    search/         조회 탭: 화면, 필터·태그·장소 선택 시트, 세션 상세 시트(읽기 전용), notifier
+    (stats/, tags/ ...)
 test/               lib/와 같은 구조 (support/는 테스트 공용 헬퍼)
 docs/specs/         기능별 명세
 ```
@@ -186,10 +189,15 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 
 | 경로                | 화면                       |
 | ------------------- | -------------------------- |
-| `/`                 | 메인                       |
+| `/`                 | 메인 (일지 탭)             |
+| `/search`           | 조회 (조회 탭)             |
 | `/journal/new`      | 새 일지 작성 (1단계)       |
 | `/journal/:id`      | 기존 일지 이어쓰기 (1단계) |
 | `/journal/:id/tags` | 태그·평가 확인 (2단계)     |
+
+- `/`와 `/search`는 `StatefulShellRoute.indexedStack`의 탭(하단 `NavigationBar`)이다. 탭을 바꿔도 각 탭의 상태(조회 필터, 스크롤 위치 등)가 유지되고, 앱을 다시 켜면 초기값이다. 탭 목록은 `lib/app/app_tabs.dart`의 `AppTab`에서 정의한다.
+- `/journal/...`은 **셸 밖**의 전체 화면 라우트라 내비게이션 바가 보이지 않는다.
+- Android 뒤로가기: 조회 탭에서는 일지 탭으로, 일지 탭에서는 앱 종료.
 
 ## 구현 현황
 
@@ -197,10 +205,11 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 | ------------------------------------------------------------------------ | --------------------------------------------------- |
 | `docs/specs/01_journal_entry.md` 일지 작성 MVP                           | 완료 (1~7단계, 웹 전체 흐름 점검)                   |
 | `docs/specs/02_tag_review_completion.md` 태그 확인 완료 개선 (평가 없음) | 완료 (1~5단계, 웹 점검·v1 데이터 마이그레이션 확인) |
+| `docs/specs/03_memo_search_stats.md` 메모 조회                           | 완료 (1~6단계, 실기기 데이터로 웹 점검. 태그 통계 탭은 준비 중 안내만) |
 
 ## 향후 계획 (지금 구현하지 않음, 구조는 확장 가능하게)
 
-- 검색/조회, 통계 화면
+- 태그 통계 탭 (명세 04 예정. 날짜별 추이, 차트)
 - 태그 관리 페이지 (이름 변경, 삭제, 동의어 편집)
 - 레슨/볼머신 연습 세션 기록
 - 사용자 수정으로부터 태그 사전 학습
