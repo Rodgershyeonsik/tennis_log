@@ -105,6 +105,7 @@ enum 값은 drift의 텍스트 enum으로 저장한다. 스키마를 바꿀 때�
 - status: draft / complete (메모가 1개 이상이면 complete)
 - tagReviewed (bool): 태그·평가 확인 단계 완료 여부. 저장 버튼에서 다시 추천을 돌린 메모(새로 쓰거나 고친 메모)가 있으면 false로 되돌린다(`AutoTagApplier`)
   - **불변식 (02에서 변경)**: tagReviewed = true인 세션은 모든 메모의 evaluationStatus가 confirmed이고(evaluation이 null인 메모가 없다), memoTags에 suggested 행이 없다. 2단계 완료 버튼이 남은 추천을 확정하고 null 평가를 none으로 채운 뒤에 true로 바꾼다. 조회·통계는 이 불변식에 기대어 확인 완료 일지의 값만 쓴다.
+  - **status = draft인데 tagReviewed = true인 세션이 생길 수 있다.** 메인 목록의 태그 버튼은 작성 중 일지에도 나와서, 일지 저장 없이 2단계를 완료하면 이렇게 된다. 기획에 없던 상태이고 메인 페이지 작업 때 정리할 예정이다. 그때까지 확인 완료 일지만 다루는 조회·통계는 `status = complete`와 `tagReviewed = true`를 **함께** 건다(`SearchRepository`가 그렇게 한다).
 - createdAt, updatedAt
 
 **cues (큐)**
