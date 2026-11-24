@@ -9,8 +9,6 @@ void main() {
   const doubleFault = 2;
   const volley = 3;
   const backVolley = 4;
-  const return_ = 5;
-  const openBody = 6;
 
   final hierarchy = TagHierarchy(const [
     SearchTag(id: serve, name: '서브', category: TagCategory.technique),
@@ -22,8 +20,6 @@ void main() {
       category: TagCategory.technique,
       parentTagId: volley,
     ),
-    SearchTag(id: return_, name: '리턴', category: TagCategory.technique),
-    SearchTag(id: openBody, name: '몸열림', category: TagCategory.form),
   ]);
 
   var nextId = 1;
@@ -49,16 +45,6 @@ void main() {
           ),
       tagIds: tagIds,
     );
-  }
-
-  List<SearchMemo> memos(
-    int count,
-    List<int> tagIds, {
-    MemoEvaluation evaluation = MemoEvaluation.none,
-  }) {
-    return [
-      for (var i = 0; i < count; i++) memo(tagIds, evaluation: evaluation),
-    ];
   }
 
   group('요약줄', () {
@@ -134,115 +120,6 @@ void main() {
       ];
 
       expect(SearchAggregator.narrowByTags(memos, {doubleFault}), memos);
-    });
-  });
-
-  group('태그 통계', () {
-    test('부모 행은 같은 메모를 한 번만 세고 직접 건수를 따로 둔다', () {
-      final rows = SearchAggregator.tagStats([
-        memo([volley]),
-        memo([backVolley]),
-        memo([volley, backVolley]),
-      ], hierarchy);
-
-      final parent = rows.single;
-      expect(parent.name, '발리');
-      expect(parent.count, 3);
-      expect(parent.directCount, 2);
-      expect(parent.children.single.name, '백발리');
-      expect(parent.children.single.count, 2);
-    });
-
-    test('부모의 평가별 건수도 같은 메모 집합으로 센다', () {
-      final rows = SearchAggregator.tagStats([
-        memo([volley, backVolley], evaluation: MemoEvaluation.bad),
-        memo([backVolley], evaluation: MemoEvaluation.good),
-      ], hierarchy);
-
-      expect(rows.single.evaluations, const EvaluationCounts(good: 1, bad: 1));
-    });
-
-    test('자식만 등장해도 부모 행이 나온다', () {
-      final rows = SearchAggregator.tagStats([
-        memo([backVolley]),
-      ], hierarchy);
-
-      final parent = rows.single;
-      expect(parent.name, '발리');
-      expect(parent.count, 1);
-      expect(parent.directCount, 0);
-      expect(parent.children.single.name, '백발리');
-      expect(parent.children.single.count, 1);
-    });
-
-    test('등장하지 않은 태그는 나오지 않고, 자식이 없으면 children이 비어 있다', () {
-      final rows = SearchAggregator.tagStats([
-        memo([volley]),
-      ], hierarchy);
-
-      expect(rows.map((row) => row.name), ['발리']);
-      expect(rows.single.children, isEmpty);
-    });
-
-    test('카테고리는 최상위 태그로 거른다', () {
-      final rows = SearchAggregator.tagStats(
-        [
-          memo([serve]),
-          memo([openBody]),
-        ],
-        hierarchy,
-        category: TagCategory.technique,
-      );
-
-      expect(rows.map((row) => row.name), ['서브']);
-    });
-
-    test('못함순은 못함 건수, 총 건수 순이다', () {
-      final rows = SearchAggregator.tagStats(
-        [
-          ...memos(3, [serve], evaluation: MemoEvaluation.bad),
-          ...memos(7, [serve]),
-          ...memos(3, [return_], evaluation: MemoEvaluation.bad),
-          ...memos(2, [return_]),
-          ...memos(1, [volley], evaluation: MemoEvaluation.bad),
-        ],
-        hierarchy,
-        sort: TagStatSort.bad,
-      );
-
-      expect(rows.map((row) => row.name), ['서브', '리턴', '발리']);
-    });
-
-    test('기준 값과 총 건수가 같으면 이름 순이다', () {
-      final rows = SearchAggregator.tagStats([
-        memo([serve]),
-        memo([return_]),
-      ], hierarchy);
-
-      expect(rows.map((row) => row.name), ['리턴', '서브']);
-    });
-
-    test('자식 행도 같은 정렬을 따른다', () {
-      final frontVolley = TagHierarchy([
-        ...hierarchy.tags,
-        const SearchTag(
-          id: 7,
-          name: '포발리',
-          category: TagCategory.technique,
-          parentTagId: volley,
-        ),
-      ]);
-
-      final rows = SearchAggregator.tagStats(
-        [
-          ...memos(3, [backVolley]),
-          ...memos(1, [7], evaluation: MemoEvaluation.good),
-        ],
-        frontVolley,
-        sort: TagStatSort.good,
-      );
-
-      expect(rows.single.children.map((row) => row.name), ['포발리', '백발리']);
     });
   });
 

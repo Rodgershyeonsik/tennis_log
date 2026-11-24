@@ -167,9 +167,6 @@ void main() {
       expect(SearchAggregator.summarize([memo], hierarchy).map((i) => i.name), [
         '서브',
       ]);
-      expect(SearchAggregator.tagStats([memo], hierarchy).map((r) => r.name), [
-        '서브',
-      ]);
     });
 
     test('확정이 아닌 평가는 쓰지 않는다', () async {

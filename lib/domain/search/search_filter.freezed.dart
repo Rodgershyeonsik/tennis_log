@@ -642,8 +642,8 @@ return $default(_that.scope,_that.evaluations,_that.tagIds,_that.tagMatch,_that.
 /// @nodoc
 
 
-class _SearchFilter implements SearchFilter {
-  const _SearchFilter({this.scope = const SearchScope.all(),  Set<MemoEvaluation> evaluations = const <MemoEvaluation>{},  Set<int> tagIds = const <int>{}, this.tagMatch = TagMatchMode.any,  Set<SessionType> sessionTypes = const <SessionType>{},  Set<SurfaceType> surfaces = const <SurfaceType>{},  Set<bool> indoorOptions = const <bool>{},  Set<int> placeIds = const <int>{},  Set<int?> conditionScores = const <int?>{},  Set<CueApplied?> cueApplied = const <CueApplied?>{}}): _evaluations = evaluations,_tagIds = tagIds,_sessionTypes = sessionTypes,_surfaces = surfaces,_indoorOptions = indoorOptions,_placeIds = placeIds,_conditionScores = conditionScores,_cueApplied = cueApplied;
+class _SearchFilter extends SearchFilter {
+  const _SearchFilter({this.scope = const SearchScope.all(),  Set<MemoEvaluation> evaluations = const <MemoEvaluation>{},  Set<int> tagIds = const <int>{}, this.tagMatch = TagMatchMode.any,  Set<SessionType> sessionTypes = const <SessionType>{},  Set<SurfaceType> surfaces = const <SurfaceType>{},  Set<bool> indoorOptions = const <bool>{},  Set<int> placeIds = const <int>{},  Set<int?> conditionScores = const <int?>{},  Set<CueApplied?> cueApplied = const <CueApplied?>{}}): _evaluations = evaluations,_tagIds = tagIds,_sessionTypes = sessionTypes,_surfaces = surfaces,_indoorOptions = indoorOptions,_placeIds = placeIds,_conditionScores = conditionScores,_cueApplied = cueApplied,super._();
   
 
 @override@JsonKey() final  SearchScope scope;

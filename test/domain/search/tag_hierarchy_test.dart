@@ -33,10 +33,6 @@ void main() {
     expect(hierarchy.withDescendants(3), {3, 4});
   });
 
-  test('최상위는 부모가 없는 태그다', () {
-    expect(hierarchy.roots.map((t) => t.id), [1, 5]);
-  });
-
   test('조상은 부모의 부모까지 모으고 자신은 뺀다', () {
     final hierarchy = TagHierarchy(const [
       SearchTag(id: 1, name: '샷', category: TagCategory.technique),

@@ -22,11 +22,6 @@ class TagHierarchy {
 
   Iterable<SearchTag> get tags => _tagsById.values;
 
-  /// 부모가 없는 태그들.
-  Iterable<SearchTag> get roots {
-    return tags.where((tag) => tag.parentTagId == null);
-  }
-
   SearchTag? tagOf(int tagId) => _tagsById[tagId];
 
   List<SearchTag> childrenOf(int tagId) {

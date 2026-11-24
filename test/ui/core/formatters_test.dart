@@ -34,6 +34,11 @@ void main() {
     });
   });
 
+  test('monthDay는 연도와 요일 없이 0을 채우지 않는다', () {
+    expect(Formatters.monthDay(DateTime(2026, 11, 7)), '11/7');
+    expect(Formatters.monthDay(DateTime(2027, 1, 30)), '1/30');
+  });
+
   group('duration', () {
     test('시간과 분을 함께 쓴다', () {
       expect(Formatters.duration(230), '3시간 50분');

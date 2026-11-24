@@ -32,6 +32,8 @@ sealed class SearchScope with _$SearchScope {
 /// 그룹 사이는 AND, 한 그룹 안의 여러 선택은 OR이다(태그만 [tagMatch]로 고른다).
 @freezed
 abstract class SearchFilter with _$SearchFilter {
+  const SearchFilter._();
+
   const factory SearchFilter({
     @Default(SearchScope.all()) SearchScope scope,
     @Default(<MemoEvaluation>{}) Set<MemoEvaluation> evaluations,
@@ -50,4 +52,13 @@ abstract class SearchFilter with _$SearchFilter {
     /// null은 "기록 없음"이다.
     @Default(<CueApplied?>{}) Set<CueApplied?> cueApplied,
   }) = _SearchFilter;
+
+  /// 메모 단위 조건(평가, 태그)을 비운 조건. 범위와 세션 단위 조건만 남는다.
+  SearchFilter get sessionOnly {
+    return copyWith(
+      evaluations: const {},
+      tagIds: const {},
+      tagMatch: TagMatchMode.any,
+    );
+  }
 }

@@ -23,6 +23,9 @@ abstract final class Formatters {
     return '$year/${date.month}/${date.day}';
   }
 
+  /// `11/7` — 차트 축처럼 연도를 쓸 자리가 없는 곳의 형식.
+  static String monthDay(DateTime date) => '${date.month}/${date.day}';
+
   /// 자정 기준 분을 `18:00`으로. 1440은 `24:00`이다(종료 시간의 상한).
   static String minutesOfDay(int minutes) {
     final hour = minutes ~/ 60;
