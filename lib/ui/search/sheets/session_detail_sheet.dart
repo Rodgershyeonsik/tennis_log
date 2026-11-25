@@ -12,13 +12,14 @@ import '../widgets/memo_content.dart';
 import '../widgets/score_table.dart';
 
 /// 세션 상세 시트(읽기 전용). 세션 요약 카드 아래에 누른 메모를 먼저 보여주고, 같은 세션의 다른
-/// 메모는 접어 둔다. 펼치기 말고는 눌러도 아무 동작이 없다.
+/// 메모는 접어 둔다. [memoId]를 넘기지 않으면 모든 메모를 쓴 순서대로 펼쳐 보여준다.
+/// 펼치기 말고는 눌러도 아무 동작이 없다.
 ///
 /// 내비게이션 바까지 덮도록 루트 내비게이터에 띄운다.
 Future<void> showSessionDetailSheet(
   BuildContext context, {
   required int sessionId,
-  required int memoId,
+  int? memoId,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -31,10 +32,10 @@ Future<void> showSessionDetailSheet(
 }
 
 class _SessionDetailSheet extends ConsumerWidget {
-  const _SessionDetailSheet({required this.sessionId, required this.memoId});
+  const _SessionDetailSheet({required this.sessionId, this.memoId});
 
   final int sessionId;
-  final int memoId;
+  final int? memoId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,12 +76,12 @@ class _SessionDetailSheet extends ConsumerWidget {
 /// 시트의 내용. 제목(날짜·시간·유형·장소) → 세션 요약(문장, 스코어) → 메모 순이고
 /// 사이를 구분선으로 나눈다.
 class _DetailBody extends StatelessWidget {
-  const _DetailBody({required this.detail, required this.memoId});
+  const _DetailBody({required this.detail, this.memoId});
 
   final SessionDetail detail;
 
-  /// 누른 메모. 그사이 지워졌으면 모든 메모를 펼쳐 보여준다.
-  final int memoId;
+  /// 누른 메모. null이거나 그사이 지워졌으면 모든 메모를 펼쳐 보여준다.
+  final int? memoId;
 
   @override
   Widget build(BuildContext context) {
@@ -336,12 +337,13 @@ TextSpan _wasSpan(String word) {
   return TextSpan(text: hasFinal ? '이었어요.' : '였어요.');
 }
 
-/// 누른 메모를 맨 위에 두고, 같은 세션의 다른 메모는 펼치기 전까지 숨긴다.
+/// 누른 메모를 맨 위에 두고, 같은 세션의 다른 메모는 펼치기 전까지 숨긴다. 누른 메모가
+/// 없으면 모든 메모를 쓴 순서대로 보여준다.
 class _MemoList extends StatefulWidget {
-  const _MemoList({required this.memos, required this.memoId});
+  const _MemoList({required this.memos, this.memoId});
 
   final List<SessionDetailMemo> memos;
-  final int memoId;
+  final int? memoId;
 
   @override
   State<_MemoList> createState() => _MemoListState();
@@ -357,13 +359,25 @@ class _MemoListState extends State<_MemoList> {
       for (final memo in widget.memos)
         if (memo.id != widget.memoId) memo,
     ];
-    // 누른 메모가 그사이 지워졌으면 접을 기준이 없으니 모두 보여준다.
+    // 누른 메모가 없거나 그사이 지워졌으면 접을 기준이 없으니 모두 보여준다.
     final showOthers = tapped.isEmpty || _expanded;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 10,
       children: [
+        if (widget.memoId == null)
+          Padding(
+            // 세션 요약의 스코어 라벨과 왼쪽을 맞춘다.
+            padding: const EdgeInsets.only(left: 6),
+            child: Text(
+              '메모 ${widget.memos.length}',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ),
         for (final memo in tapped)
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

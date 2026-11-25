@@ -235,6 +235,7 @@ void main() {
     double top(String text) => tester.getTopLeft(inSheet(find.text(text))).dy;
     expect(inSheet(find.text('둘째 메모')), findsOneWidget);
     expect(top('선택한 메모'), lessThan(top('둘째 메모')));
+    expect(inSheet(find.text('메모 3')), findsNothing);
     expect(inSheet(find.text('첫째 메모')), findsNothing);
     expect(inSheet(find.text('셋째 메모')), findsNothing);
 
@@ -259,6 +260,31 @@ void main() {
 
     await openDetail(tester, '하나뿐인 메모');
 
+    expect(inSheet(find.byType(TextButton)), findsNothing);
+
+    await closePage(tester);
+  });
+
+  testWidgets('고른 메모 없이 열면 모든 메모를 쓴 순서대로 펼쳐 보여준다', (tester) async {
+    final session = await addSession();
+    // 넣은 순서(id)와 orderIndex를 다르게 둔다.
+    await addMemo(session, '셋째 메모', 2);
+    await addMemo(session, '첫째 메모', 0);
+    await addMemo(session, '둘째 메모', 1);
+    await pumpPage(tester);
+
+    showSessionDetailSheet(
+      tester.element(find.byType(SearchPage)),
+      sessionId: session,
+    );
+    await tester.pumpAndSettle();
+
+    double top(String text) => tester.getTopLeft(inSheet(find.text(text))).dy;
+    expect(inSheet(find.text('2026년 10월 12일 월요일')), findsOneWidget);
+    expect(top('메모 3'), lessThan(top('첫째 메모')));
+    expect(top('첫째 메모'), lessThan(top('둘째 메모')));
+    expect(top('둘째 메모'), lessThan(top('셋째 메모')));
+    expect(inSheet(find.text('선택한 메모')), findsNothing);
     expect(inSheet(find.byType(TextButton)), findsNothing);
 
     await closePage(tester);

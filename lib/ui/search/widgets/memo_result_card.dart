@@ -12,14 +12,18 @@ class MemoResultCard extends StatelessWidget {
     super.key,
     required this.memo,
     required this.hierarchy,
-    required this.onTap,
-  });
+    this.onTap,
+    this.showChevron = true,
+  }) : assert(!showChevron || onTap != null);
 
   final SearchMemo memo;
   final TagHierarchy hierarchy;
 
   /// 카드 어디를 눌러도 불린다. 태그 칩과 평가 아이콘도 따로 반응하지 않는다.
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+
+  /// 오른쪽 화살표. 숨기면 카드를 눌러도 아무 동작이 없고 [onTap]도 불리지 않는다.
+  final bool showChevron;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +35,7 @@ class MemoResultCard extends StatelessWidget {
         .toList();
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: showChevron ? onTap : null,
       behavior: HitTestBehavior.opaque,
       child: EntryCard(
         child: Column(
@@ -50,11 +54,12 @@ class MemoResultCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                if (showChevron)
+                  Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
               ],
             ),
             const SizedBox(height: 8),
