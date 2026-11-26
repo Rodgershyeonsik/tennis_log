@@ -7,11 +7,12 @@ import 'search_notifier.dart';
 import 'search_providers.dart';
 import 'widgets/memo_result_tab.dart';
 import 'widgets/search_filter_bar.dart';
+import 'widgets/stats_tab.dart';
 
 /// 조회 화면. 탭 화면이라 뒤로가기 버튼이 없다.
 ///
-/// 메모 탭과 태그 통계 탭은 같은 결과 메모 집합을 쓴다. 태그 통계는 다음 단계에서
-/// 채운다.
+/// 메모 탭과 태그 통계 탭은 범위와 세션 단위 필터를 함께 쓴다. 평가·태그 필터는
+/// 메모 탭에만 적용된다.
 class SearchPage extends ConsumerWidget {
   const SearchPage({super.key});
 
@@ -31,9 +32,6 @@ class SearchPage extends ConsumerWidget {
       searchProvider.select((state) => state.summaryTagIds),
     );
     final excluded = ref.watch(searchExcludedCountProvider).value ?? 0;
-    final mutedStyle = theme.textTheme.bodyMedium?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
 
     return DefaultTabController(
       length: 2,
@@ -59,13 +57,8 @@ class SearchPage extends ConsumerWidget {
                 const Tab(text: '태그 통계'),
               ],
             ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  const MemoResultTab(),
-                  Center(child: Text('태그 통계를 준비하고 있어요.', style: mutedStyle)),
-                ],
-              ),
+            const Expanded(
+              child: TabBarView(children: [MemoResultTab(), StatsTab()]),
             ),
           ],
         ),

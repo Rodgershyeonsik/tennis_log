@@ -90,6 +90,13 @@ class SearchStats {
     );
   }
 
+  /// [memos]의 세션 목록. 오래된 세션이 앞이다.
+  static List<SearchSession> sessionsOf(List<SearchMemo> memos) {
+    return {for (final memo in memos) memo.session.id: memo.session}.values
+        .toList()
+      ..sort((a, b) => compareSessionsNewestFirst(b, a));
+  }
+
   /// 날짜 라벨마다 연도를 붙일지 여부. [dates]는 오래된 순이다.
   ///
   /// 두 해 이상에 걸치면 첫 날짜와 해가 바뀌는 날짜에만 붙인다.
@@ -112,17 +119,13 @@ class SearchStats {
   }
 
   List<SessionTrendItem> _buildSessions() {
-    final sessions = {
-      for (final memo in _memos) memo.session.id: memo.session,
-    }.values.toList()..sort((a, b) => compareSessionsNewestFirst(b, a));
-
     final memosBySession = <int, List<SearchMemo>>{};
     for (final memo in chartMemos) {
       memosBySession.putIfAbsent(memo.session.id, () => []).add(memo);
     }
 
     return [
-      for (final session in sessions)
+      for (final session in sessionsOf(_memos))
         (
           session: session,
           evaluations: EvaluationCounts.of(

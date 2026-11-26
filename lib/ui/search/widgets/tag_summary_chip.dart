@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/db/enums.dart';
 import '../../../domain/search/search_aggregator.dart';
-import '../../core/widgets/evaluation_display.dart';
+import 'evaluation_count.dart';
 
 /// 메모 탭 요약 카드의 칩. 예: `서브 7 · 👍2 👎5`. 0인 평가는 생략한다.
 class TagSummaryChip extends StatelessWidget {
@@ -29,38 +29,11 @@ class TagSummaryChip extends StatelessWidget {
         spacing: 6,
         children: [
           Text('${item.name} ${item.count} ·'),
-          for (final (value, count) in [
-            (MemoEvaluation.good, counts.good),
-            (MemoEvaluation.bad, counts.bad),
-            (MemoEvaluation.question, counts.question),
-            (MemoEvaluation.none, counts.none),
-          ])
-            if (count > 0) _EvaluationCount(value: value, count: count),
+          for (final value in MemoEvaluation.values)
+            if (counts.countOf(value) > 0)
+              EvaluationCount(value: value, count: counts.countOf(value)),
         ],
       ),
-    );
-  }
-}
-
-class _EvaluationCount extends StatelessWidget {
-  const _EvaluationCount({required this.value, required this.count});
-
-  final MemoEvaluation value;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 2,
-      children: [
-        Icon(
-          evaluationIcon(value),
-          size: 14,
-          color: evaluationColor(context, value),
-        ),
-        Text('$count'),
-      ],
     );
   }
 }

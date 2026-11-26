@@ -6,8 +6,10 @@ import '../../data/repositories/place_repository.dart';
 import '../../data/repositories/search_repository.dart';
 import '../../domain/search/search_filter.dart';
 import '../../domain/search/search_models.dart';
+import '../../domain/search/search_stats.dart';
 import '../../domain/search/tag_hierarchy.dart';
 import 'search_notifier.dart';
+import 'stats_notifier.dart';
 
 part 'search_providers.g.dart';
 
@@ -40,6 +42,32 @@ Stream<int> searchExcludedCount(Ref ref) {
 @riverpod
 Stream<TagHierarchy> searchTagHierarchy(Ref ref) {
   return ref.watch(searchRepositoryProvider).watchTags().map(TagHierarchy.new);
+}
+
+/// 통계 탭이 쓰는 메모 전체. 평가·태그 필터는 적용하지 않는다.
+@riverpod
+Stream<List<SearchMemo>> statsMemos(Ref ref) {
+  final filter = ref.watch(
+    searchProvider.select((state) => state.filter.sessionOnly),
+  );
+  return ref.watch(searchRepositoryProvider).watchMemos(filter);
+}
+
+/// 통계 탭의 집계. 아직 읽는 중이면 null이다.
+@riverpod
+SearchStats? searchStats(Ref ref) {
+  final memos = ref.watch(statsMemosProvider).value;
+  final hierarchy = ref.watch(searchTagHierarchyProvider).value;
+  final chartTagId = ref.watch(
+    statsProvider.select((state) => state.chartTagId),
+  );
+  if (memos == null || hierarchy == null) return null;
+
+  return SearchStats(
+    memos: memos,
+    hierarchy: hierarchy,
+    chartTagId: chartTagId,
+  );
 }
 
 /// 장소 전체, 이름 순. drift 행 클래스라 손으로 선언한다(CLAUDE.md).

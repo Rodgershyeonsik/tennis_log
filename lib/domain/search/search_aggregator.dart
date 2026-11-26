@@ -37,6 +37,13 @@ abstract class EvaluationCounts with _$EvaluationCounts {
   }
 
   int get total => good + bad + question + none;
+
+  int countOf(MemoEvaluation value) => switch (value) {
+    MemoEvaluation.good => good,
+    MemoEvaluation.bad => bad,
+    MemoEvaluation.question => question,
+    MemoEvaluation.none => none,
+  };
 }
 
 /// 메모 탭 요약줄의 칩 하나.

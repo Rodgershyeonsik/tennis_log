@@ -5,6 +5,7 @@ import '../../../domain/search/search_aggregator.dart';
 import '../search_notifier.dart';
 import '../search_providers.dart';
 import '../sheets/session_detail_sheet.dart';
+import 'empty_result.dart';
 import 'memo_result_card.dart';
 import 'tag_summary_card.dart';
 
@@ -28,7 +29,12 @@ class MemoResultTab extends ConsumerWidget {
     if (memos == null || hierarchy == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (memos.isEmpty) return _EmptyResult(onReset: notifier.resetFilter);
+    if (memos.isEmpty) {
+      return EmptyResult(
+        message: '조건에 맞는 메모가 없어요.',
+        onReset: notifier.resetFilter,
+      );
+    }
 
     final sorted = SearchAggregator.sortMemos(
       SearchAggregator.narrowByTags(memos, summaryTagIds),
@@ -83,33 +89,6 @@ class MemoResultTab extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _EmptyResult extends StatelessWidget {
-  const _EmptyResult({required this.onReset});
-
-  final VoidCallback onReset;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 8,
-        children: [
-          Text(
-            '조건에 맞는 메모가 없어요.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          TextButton(onPressed: onReset, child: const Text('필터 초기화')),
-        ],
-      ),
     );
   }
 }

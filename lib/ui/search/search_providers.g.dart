@@ -218,6 +218,96 @@ final class SearchTagHierarchyProvider
 String _$searchTagHierarchyHash() =>
     r'bdea38911ea965f3eb93ec356ea501db652f273b';
 
+/// 통계 탭이 쓰는 메모 전체. 평가·태그 필터는 적용하지 않는다.
+
+@ProviderFor(statsMemos)
+final statsMemosProvider = StatsMemosProvider._();
+
+/// 통계 탭이 쓰는 메모 전체. 평가·태그 필터는 적용하지 않는다.
+
+final class StatsMemosProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<SearchMemo>>,
+          List<SearchMemo>,
+          Stream<List<SearchMemo>>
+        >
+    with $FutureModifier<List<SearchMemo>>, $StreamProvider<List<SearchMemo>> {
+  /// 통계 탭이 쓰는 메모 전체. 평가·태그 필터는 적용하지 않는다.
+  StatsMemosProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'statsMemosProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$statsMemosHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<SearchMemo>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<SearchMemo>> create(Ref ref) {
+    return statsMemos(ref);
+  }
+}
+
+String _$statsMemosHash() => r'253d6428152b8f2ea0f15a331df148fbc337269d';
+
+/// 통계 탭의 집계. 아직 읽는 중이면 null이다.
+
+@ProviderFor(searchStats)
+final searchStatsProvider = SearchStatsProvider._();
+
+/// 통계 탭의 집계. 아직 읽는 중이면 null이다.
+
+final class SearchStatsProvider
+    extends $FunctionalProvider<SearchStats?, SearchStats?, SearchStats?>
+    with $Provider<SearchStats?> {
+  /// 통계 탭의 집계. 아직 읽는 중이면 null이다.
+  SearchStatsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'searchStatsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$searchStatsHash();
+
+  @$internal
+  @override
+  $ProviderElement<SearchStats?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SearchStats? create(Ref ref) {
+    return searchStats(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SearchStats? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SearchStats?>(value),
+    );
+  }
+}
+
+String _$searchStatsHash() => r'bc6bdd357e1b7d16c593ab53a0943bcc6ef5b536';
+
 /// 세션 상세 시트. 일지가 지워졌으면 null이다.
 
 @ProviderFor(sessionDetail)
